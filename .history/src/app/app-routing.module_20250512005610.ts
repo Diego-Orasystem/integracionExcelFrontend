@@ -47,7 +47,7 @@ export const routes: Routes = [
   },
   {
     path: 'logs',
-    loadChildren: () => import('./modules/logs/logs.module').then(m => m.LogsModule),
+    loadChildren: () => import('./modules/logs').then(m => m.LogsModule),
     canActivate: [AuthGuard],
     data: { roles: ['admin', 'company_admin'] }
   },

@@ -1,0 +1,73 @@
+# Dependencias
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de compilación y distribución
+/dist/
+/tmp/
+/out-tsc/
+/bazel-out/
+
+# Archivos de configuración de Angular
+/.angular/
+.angular/
+
+# Archivos de IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de logs
+*.log
+logs/
+
+# Archivos de cobertura de pruebas
+/coverage/
+*.lcov
+
+# Archivos de configuración local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de TypeScript
+*.tsbuildinfo
+
+# Archivos de caché
+.npm/
+.eslintcache
+
+# Archivos de respaldo
+*.bak
+*.tmp
+
+# Archivos de documentación generados automáticamente (opcional)
+# Descomenta si no quieres versionar la documentación
+# /Documentacion/
+
+# Archivos de configuración específicos del entorno
+# proxy.conf.json (si contiene información sensible)
+
+# Archivos de instalación
+# install-dependencies.bat
+# install-dependencies.sh
+
+# Docker
+# Dockerfile
+# docker-compose.yml
+# nginx.conf
+# .dockerignore
+
+# Scripts de deployment
+# deploy.sh
+# deploy.ps1
