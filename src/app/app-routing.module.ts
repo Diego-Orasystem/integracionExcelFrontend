@@ -45,12 +45,15 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     data: { roles: ['admin', 'company_admin'] }
   },
+  // TEMPORALMENTE DESHABILITADO - Logs module causing build issues
+  /*
   {
     path: 'logs',
     loadChildren: () => import('./modules/logs').then(m => m.LogsModule),
     canActivate: [AuthGuard],
     data: { roles: ['admin', 'company_admin'] }
   },
+  */
   {
     path: 'organization',
     loadChildren: () => import('./modules/organization/organization.module').then(m => m.OrganizationModule),
