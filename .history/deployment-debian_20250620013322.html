@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Deployment - Excel Manager en Debian</title>
+    <link rel="stylesheet" href="deployment-debian.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐳 Guía de Deployment - Excel Manager</h1>
+            <p class="subtitle">Deployment completo en servidor Debian usando Docker</p>
+        </header>
+
+        <nav class="toc">
+            <h2>📋 Tabla de Contenidos</h2>
+            <ul>
+                <li><a href="#requisitos">Requisitos Previos</a></li>
+                <li><a href="#instalacion-docker">Instalación de Docker</a></li>
+                <li><a href="#preparacion">Preparación del Proyecto</a></li>
+                <li><a href="#build">Construcción de la Imagen</a></li>
+                <li><a href="#deployment">Deployment</a></li>
+                <li><a href="#configuracion">Configuración Avanzada</a></li>
+                <li><a href="#mantenimiento">Mantenimiento</a></li>
+                <li><a href="#troubleshooting">Solución de Problemas</a></li>
+            </ul>
+        </nav>
+
+        <section id="requisitos" class="section">
+            <h2>🔧 Requisitos Previos</h2>
+            <div class="card">
+                <h3>Sistema Operativo</h3>
+                <ul>
+                    <li>Debian 10 (Buster) o superior</li>
+                    <li>Ubuntu 18.04 LTS o superior</li>
+                    <li>Mínimo 2GB RAM, 10GB espacio libre</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Acceso y Permisos</h3>
+                <ul>
+                    <li>Acceso root o usuario con sudo</li>
+                    <li>Conexión a internet estable</li>
+                    <li>Puertos 80 y 443 disponibles</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="instalacion-docker" class="section">
+            <h2>🐳 Instalación de Docker</h2>
+            <div class="card">
+                <h3>1. Actualizar el sistema</h3>
+                <div class="code-block">
+                    <code>
+sudo apt update && sudo apt upgrade -y
+                    </code>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>2. Instalar dependencias</h3>
+                <div class="code-block">
+                    <code>
+sudo apt install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>3. Agregar clave GPG de Docker</h3>
+                <div class="code-block">
+                    <code>
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>4. Agregar repositorio de Docker</h3>
+                <div class="code-block">
+                    <code>
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>5. Instalar Docker</h3>
+                <div class="code-block">
+                    <code>
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>6. Configurar usuario</h3>
+                <div class="code-block">
+                    <code>
+sudo usermod -aG docker $USER
+newgrp docker
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>7. Verificar instalación</h3>
+                <div class="code-block">
+                    <code>
+docker --version
+docker compose version
+                    </code>
+                </div>
+            </div>
+        </section>
+
+        <section id="preparacion" class="section">
+            <h2>📁 Preparación del Proyecto</h2>
+            <div class="card">
+                <h3>1. Clonar o subir el proyecto</h3>
+                <div class="code-block">
+                    <code>
+# Opción A: Clonar desde repositorio
+git clone https://github.com/tu-usuario/integracionExcelFrontend.git
+cd integracionExcelFrontend
+
+# Opción B: Subir archivos vía SCP
+scp -r ./integracionExcelFrontend usuario@servidor:/home/usuario/
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>2. Verificar archivos Docker</h3>
+                <div class="code-block">
+                    <code>
+ls -la Dockerfile nginx.conf docker-compose.yml .dockerignore
+                    </code>
+                </div>
+                <p class="note">✅ Todos estos archivos deben estar presentes en el directorio raíz</p>
+            </div>
+        </section>
+
+        <section id="build" class="section">
+            <h2>🔨 Construcción de la Imagen</h2>
+            <div class="card">
+                <h3>1. Construir imagen Docker</h3>
+                <div class="code-block">
+                    <code>
+docker build -t excel-manager-frontend:latest .
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>2. Verificar imagen creada</h3>
+                <div class="code-block">
+                    <code>
+docker images | grep excel-manager
+                    </code>
+                </div>
+            </div>
+        </section>
+
+        <section id="deployment" class="section">
+            <h2>🚀 Deployment</h2>
+            <div class="card">
+                <h3>Opción A: Docker Compose (Recomendado)</h3>
+                <div class="code-block">
+                    <code>
+# Iniciar servicios
+docker compose up -d
+
+# Verificar estado
+docker compose ps
+
+# Ver logs
+docker compose logs -f frontend
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Opción B: Docker Run</h3>
+                <div class="code-block">
+                    <code>
+# Solo frontend
+docker run -d \
+  --name excel-manager-frontend \
+  -p 80:80 \
+  --restart unless-stopped \
+  excel-manager-frontend:latest
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>3. Verificar deployment</h3>
+                <div class="code-block">
+                    <code>
+# Verificar contenedores
+docker ps
+
+# Probar conectividad
+curl -I http://localhost
+
+# Verificar logs
+docker logs excel-manager-frontend
+                    </code>
+                </div>
+            </div>
+        </section>
+
+        <section id="configuracion" class="section">
+            <h2>⚙️ Configuración Avanzada</h2>
+            <div class="card">
+                <h3>1. Configurar dominio y SSL</h3>
+                <div class="code-block">
+                    <code>
+# Instalar Certbot
+sudo apt install -y certbot python3-certbot-nginx
+
+# Obtener certificado SSL
+sudo certbot --nginx -d tu-dominio.com
+
+# Renovación automática
+sudo crontab -e
+# Agregar: 0 12 * * * /usr/bin/certbot renew --quiet
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>2. Configurar firewall</h3>
+                <div class="code-block">
+                    <code>
+# Instalar UFW
+sudo apt install -y ufw
+
+# Configurar reglas
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# Activar firewall
+sudo ufw enable
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>3. Configurar proxy reverso (Nginx)</h3>
+                <div class="code-block">
+                    <code>
+# Instalar Nginx en el host
+sudo apt install -y nginx
+
+# Crear configuración
+sudo nano /etc/nginx/sites-available/excel-manager
+
+# Contenido del archivo:
+server {
+    listen 80;
+    server_name tu-dominio.com;
+    
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Habilitar sitio
+sudo ln -s /etc/nginx/sites-available/excel-manager /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+                    </code>
+                </div>
+            </div>
+        </section>
+
+        <section id="mantenimiento" class="section">
+            <h2>🔧 Mantenimiento</h2>
+            <div class="card">
+                <h3>Comandos útiles</h3>
+                <div class="code-block">
+                    <code>
+# Reiniciar servicios
+docker compose restart
+
+# Actualizar aplicación
+docker compose pull
+docker compose up -d
+
+# Limpiar recursos no utilizados
+docker system prune -f
+
+# Backup de volúmenes
+docker run --rm -v excel-manager_data:/data -v $(pwd):/backup alpine tar czf /backup/backup.tar.gz /data
+
+# Restaurar backup
+docker run --rm -v excel-manager_data:/data -v $(pwd):/backup alpine tar xzf /backup/backup.tar.gz -C /
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Monitoreo</h3>
+                <div class="code-block">
+                    <code>
+# Ver uso de recursos
+docker stats
+
+# Logs en tiempo real
+docker compose logs -f
+
+# Verificar salud del contenedor
+docker inspect excel-manager-frontend | grep Health
+                    </code>
+                </div>
+            </div>
+        </section>
+
+        <section id="troubleshooting" class="section">
+            <h2>🔍 Solución de Problemas</h2>
+            <div class="card">
+                <h3>Problemas Comunes</h3>
+                <div class="problem">
+                    <h4>❌ Error: "Cannot connect to the Docker daemon"</h4>
+                    <div class="solution">
+                        <p><strong>Solución:</strong></p>
+                        <div class="code-block">
+                            <code>
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+                            </code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="problem">
+                    <h4>❌ Puerto 80 ya está en uso</h4>
+                    <div class="solution">
+                        <p><strong>Solución:</strong></p>
+                        <div class="code-block">
+                            <code>
+# Verificar qué está usando el puerto
+sudo netstat -tulpn | grep :80
+
+# Cambiar puerto en docker-compose.yml
+ports:
+  - "8080:80"
+                            </code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="problem">
+                    <h4>❌ La aplicación no carga</h4>
+                    <div class="solution">
+                        <p><strong>Verificar:</strong></p>
+                        <div class="code-block">
+                            <code>
+# Logs del contenedor
+docker logs excel-manager-frontend
+
+# Estado del contenedor
+docker ps -a
+
+# Conectividad
+curl -v http://localhost
+                            </code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Comandos de Diagnóstico</h3>
+                <div class="code-block">
+                    <code>
+# Información del sistema
+docker info
+docker version
+
+# Uso de espacio
+df -h
+docker system df
+
+# Procesos
+ps aux | grep docker
+systemctl status docker
+                    </code>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="card">
+                <h3>📞 Soporte</h3>
+                <p>Para soporte adicional, contacta al equipo de desarrollo o consulta la documentación técnica del proyecto.</p>
+                <p><strong>Versión:</strong> 1.0.0 | <strong>Fecha:</strong> 2024</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html> 

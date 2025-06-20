@@ -1,0 +1,341 @@
+/* Reset y configuración base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px 0;
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    color: white;
+    border-radius: 10px;
+    margin: -20px -20px 40px -20px;
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.subtitle {
+    font-size: 1.2em;
+    opacity: 0.9;
+}
+
+/* Tabla de contenidos */
+.toc {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border-left: 4px solid #3498db;
+}
+
+.toc h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.toc ul {
+    list-style: none;
+    columns: 2;
+    column-gap: 30px;
+}
+
+.toc li {
+    margin-bottom: 8px;
+    break-inside: avoid;
+}
+
+.toc a {
+    color: #3498db;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.toc a:hover {
+    background: #3498db;
+    color: white;
+    transform: translateX(5px);
+}
+
+/* Secciones */
+.section {
+    margin-bottom: 40px;
+}
+
+.section h2 {
+    color: #2c3e50;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #3498db;
+}
+
+/* Cards */
+.card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.card h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    border-left: 4px solid #3498db;
+    padding-left: 10px;
+}
+
+.card h4 {
+    color: #e74c3c;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.card ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.card li {
+    margin-bottom: 5px;
+}
+
+/* Bloques de código */
+.code-block {
+    background: #2c3e50;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+    overflow-x: auto;
+    position: relative;
+}
+
+.code-block::before {
+    content: "💻";
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.2em;
+}
+
+.code-block code {
+    color: #ecf0f1;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    display: block;
+}
+
+/* Notas */
+.note {
+    background: #d4edda;
+    color: #155724;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border-left: 4px solid #28a745;
+    margin: 10px 0;
+    font-weight: 500;
+}
+
+/* Problemas y soluciones */
+.problem {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.solution {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.solution p {
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #0c5460;
+}
+
+/* Footer */
+footer {
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 2px solid #ecf0f1;
+}
+
+footer .card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+}
+
+footer .card h3 {
+    color: white;
+    border-left: 4px solid white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        margin: 10px;
+        padding: 15px;
+    }
+    
+    header {
+        margin: -15px -15px 30px -15px;
+        padding: 20px 15px;
+    }
+    
+    header h1 {
+        font-size: 2em;
+    }
+    
+    .toc ul {
+        columns: 1;
+    }
+    
+    .section h2 {
+        font-size: 1.5em;
+    }
+    
+    .code-block {
+        font-size: 0.8em;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #2980b9;
+}
+
+/* Efectos de hover para enlaces */
+a {
+    transition: all 0.3s ease;
+}
+
+/* Destacar comandos importantes */
+.code-block code {
+    position: relative;
+}
+
+.code-block:hover {
+    background: #34495e;
+    transform: scale(1.02);
+}
+
+/* Indicadores de estado */
+.status-success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.status-warning {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.status-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Print styles */
+@media print {
+    body {
+        background: white;
+    }
+    
+    .container {
+        box-shadow: none;
+        margin: 0;
+    }
+    
+    header {
+        background: #2c3e50 !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .code-block {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .code-block code {
+        color: #212529 !important;
+    }
+} 

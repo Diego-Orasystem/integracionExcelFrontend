@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    container_name: excel-manager-frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - api-backend
+    environment:
+      - NODE_ENV=production
+
+  # Ejemplo de servicio backend (ajustar según tu API)
+  api-backend:
+    # Reemplaza con la imagen de tu API backend
+    image: your-api-backend:latest
+    container_name: excel-manager-api
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=your-database-url
+    # volumes:
+    #   - ./api-data:/app/data
+
+networks:
+  app-network:
+    driver: bridge
+
+# volumes:
+#   api-data:
+#     driver: local 

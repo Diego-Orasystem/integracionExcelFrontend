@@ -67,7 +67,3 @@ logs/
 # docker-compose.yml
 # nginx.conf
 # .dockerignore
-
-# Scripts de deployment
-# deploy.sh
-# deploy.ps1
