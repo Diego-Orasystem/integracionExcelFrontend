@@ -54,11 +54,11 @@ docker compose up -d
 
 ### 1. En nginx.conf:
 ```nginx
-# Descomentar y ajustar:
-location /api/ {
-    proxy_pass http://tu-backend-real:5000/;
-    # ... resto de configuración
-}
+# Descomentar las líneas que empiezan con # (cambiar # por nada):
+# location /api/ {
+#     proxy_pass http://tu-backend-real:5000/;
+#     # ... resto de configuración
+# }
 ```
 
 ### 2. En docker-compose.yml:
