@@ -1,0 +1,83 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>Iniciar Sesión con Código</h2>
+    
+    <!-- Paso 1: Formulario de solicitud de código -->
+    <div *ngIf="step === 'email'">
+      <p class="description">Ingresa tu correo electrónico para recibir un código de verificación.</p>
+      
+      <form [formGroup]="emailForm" (ngSubmit)="onRequestCode()">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email" 
+            class="form-control"
+            [ngClass]="{ 'is-invalid': emailForm.get('email')?.touched && emailForm.get('email')?.invalid }"
+          >
+          <div *ngIf="emailForm.get('email')?.touched && emailForm.get('email')?.invalid" class="error-message">
+            <span *ngIf="emailForm.get('email')?.errors?.['required']">El email es requerido</span>
+            <span *ngIf="emailForm.get('email')?.errors?.['email']">Formato de email inválido</span>
+          </div>
+        </div>
+        
+        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+        
+        <div class="form-actions">
+          <button type="submit" [disabled]="emailForm.invalid || loading" class="login-btn">
+            <span *ngIf="loading" class="spinner"></span>
+            <span *ngIf="!loading">Solicitar Código</span>
+          </button>
+        </div>
+      </form>
+      
+      <div class="login-options">
+        <a [routerLink]="['/auth/login']">Volver al inicio de sesión con contraseña</a>
+      </div>
+    </div>
+    
+    <!-- Paso 2: Formulario de verificación de código -->
+    <div *ngIf="step === 'code'">
+      <p class="description">Ingresa el código de 6 dígitos que enviamos a <strong>{{ email }}</strong></p>
+      
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+      </div>
+      
+      <form [formGroup]="codeForm" (ngSubmit)="onVerifyCode()">
+        <div class="form-group">
+          <label for="code">Código de verificación:</label>
+          <input 
+            type="text" 
+            id="code" 
+            formControlName="code" 
+            class="form-control code-input"
+            [ngClass]="{ 'is-invalid': codeForm.get('code')?.touched && codeForm.get('code')?.invalid }"
+            maxlength="6"
+            placeholder="Ingresa el código de 6 dígitos"
+          >
+          <div *ngIf="codeForm.get('code')?.touched && codeForm.get('code')?.invalid" class="error-message">
+            <span *ngIf="codeForm.get('code')?.errors?.['required']">El código es requerido</span>
+            <span *ngIf="codeForm.get('code')?.errors?.['minlength'] || codeForm.get('code')?.errors?.['maxlength']">El código debe tener 6 dígitos</span>
+            <span *ngIf="codeForm.get('code')?.errors?.['pattern']">El código debe contener solo números</span>
+          </div>
+        </div>
+        
+        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+        
+        <div class="form-actions">
+          <button type="submit" [disabled]="codeForm.invalid || loading" class="login-btn">
+            <span *ngIf="loading" class="spinner"></span>
+            <span *ngIf="!loading">Verificar Código</span>
+          </button>
+        </div>
+      </form>
+      
+      <div class="login-options">
+        <button type="button" (click)="resendCode()" [disabled]="loading" class="link-btn">Reenviar código</button>
+        <button type="button" (click)="changeEmail()" class="link-btn">Cambiar correo</button>
+      </div>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,59 @@
+<div class="upload-container">
+  <h2>Subir archivos con nombre personalizado</h2>
+  
+  <div class="card">
+    <div class="card-body">
+      <app-file-upload
+        [accept]="'.xlsx,.xls,.pdf,.docx,.doc'"
+        [multiple]="true"
+        [allowCustomName]="true"
+        (fileSelectedWithCustomName)="onFilesSelectedWithCustomName($event)"
+        label="Seleccionar archivos"
+      ></app-file-upload>
+      
+      <div class="selected-files-info" *ngIf="selectedFiles.length > 0">
+        <p><strong>{{ selectedFiles.length }}</strong> archivo(s) seleccionado(s)</p>
+      </div>
+      
+      <div class="error-message" *ngIf="error">
+        <div class="alert alert-danger">{{ error }}</div>
+      </div>
+      
+      <div class="progress-container" *ngIf="isUploading || uploadCompleted">
+        <div class="progress">
+          <div 
+            class="progress-bar" 
+            [ngClass]="{'bg-success': uploadCompleted}"
+            [style.width.%]="uploadProgress"
+          >
+            {{ uploadProgress }}%
+          </div>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button 
+          class="btn btn-primary" 
+          (click)="uploadFiles()" 
+          [disabled]="selectedFiles.length === 0 || isUploading"
+        >
+          Subir archivos
+        </button>
+        
+        <button 
+          class="btn btn-secondary" 
+          (click)="resetUpload()" 
+          [disabled]="isUploading"
+        >
+          Reiniciar
+        </button>
+      </div>
+      
+      <div class="success-message" *ngIf="uploadCompleted">
+        <div class="alert alert-success">
+          Los archivos se han subido correctamente.
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementación Frontend - Menú Dinámico y Archivos de Ejemplo</title>
+    <link rel="stylesheet" href="documentacion-implementacion-menu-y-archivos.css">
+</head>
+<body>
+    <header>
+        <h1>Implementación Frontend - Menú Dinámico y Archivos de Ejemplo</h1>
+        <p class="subtitle">Guía Técnica - Mayo 2024</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#intro">Introducción</a></li>
+            <li><a href="#arquitectura">Arquitectura</a></li>
+            <li><a href="#apis">APIs</a></li>
+            <li><a href="#db">Modelo de Datos</a></li>
+            <li><a href="#menu">Implementación Menú</a></li>
+            <li><a href="#archivos">Implementación Archivos</a></li>
+            <li><a href="#testing">Pruebas</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="intro">
+            <h2>Introducción</h2>
+            <p>Esta guía técnica detalla la implementación frontend del menú dinámico basado en permisos y la funcionalidad de archivos de ejemplo para subáreas en el sistema de gestión documental.</p>
+            
+            <h3>Objetivos de la Implementación</h3>
+            <ol>
+                <li>Desarrollar la interfaz de usuario para el sistema de menú adaptativo que muestre solo las opciones a las que el usuario tiene acceso según su rol.</li>
+                <li>Implementar los componentes frontend para la visualización y gestión de archivos de ejemplo en subáreas.</li>
+                <li>Integrar la interfaz de usuario con las APIs de backend para obtener y manipular datos.</li>
+                <li>Aplicar el sistema de permisos para controlar la visualización de componentes y funcionalidades en la UI.</li>
+            </ol>
+        </section>
+
+        <section id="arquitectura">
+            <h2>Arquitectura de la Solución</h2>
+            
+            <h3>Visión General</h3>
+            <p>La arquitectura frontend se basa en el patrón de componentes de Angular con una clara separación de responsabilidades:</p>
+            
+            <div class="code-snippet">
+                <pre><code>
+└── frontend/
+    ├── src/
+        ├── app/
+        │   ├── components/
+        │   │   ├── layout/
+        │   │   │   ├── side-menu/
+        │   │   │   │   ├── side-menu.component.ts
+        │   │   │   │   ├── side-menu.component.html
+        │   │   │   │   ├── side-menu.component.scss
+        │   │   │   │   ├── menu-items.component.ts
+        │   │   │   │   ├── menu-items.component.html
+        │   │   │   │   └── menu-items.component.scss
+        │   │   │   ├── header/
+        │   │   │   │   ├── header.component.ts
+        │   │   │   │   ├── header.component.html
+        │   │   │   │   └── header.component.scss
+        │   │   │   └── footer/
+        │   │   │       ├── footer.component.ts
+        │   │   │       ├── footer.component.html
+        │   │   │       └── footer.component.scss
+        │   │   ├── files/
+        │   │   │   ├── sample-files/
+        │   │   │   │   ├── sample-files-list.component.ts
+        │   │   │   │   ├── sample-files-list.component.html
+        │   │   │   │   ├── sample-files-list.component.scss
+        │   │   │   │   ├── sample-file-item.component.ts
+        │   │   │   │   ├── sample-file-item.component.html
+        │   │   │   │   └── sample-file-item.component.scss
+        │   │   │   ├── file-uploader/
+        │   │   │   │   ├── file-uploader.component.ts
+        │   │   │   │   ├── file-uploader.component.html
+        │   │   │   │   └── file-uploader.component.scss
+        │   │   │   └── file-viewer/
+        │   │   │       ├── file-viewer.component.ts
+        │   │   │       ├── file-viewer.component.html
+        │   │   │       └── file-viewer.component.scss
+        │   │   └── shared/
+        │   │       ├── button/
+        │   │       ├── modal/
+        │   │       └── loading-spinner/
+        │   ├── pages/
+        │   │   ├── dashboard/
+        │   │   ├── sub-areas/
+        │   │   │   ├── sub-areas-list/
+        │   │   │   ├── sub-area-detail/
+        │   │   │   └── sub-area-form/
+        │   │   └── files/
+        │   │       └── sample-files-manager/
+        │   ├── core/
+        │   │   ├── auth/
+        │   │   ├── guards/
+        │   │   ├── interceptors/
+        │   │   └── models/
+        │   ├── services/
+        │   │   ├── menu.service.ts
+        │   │   ├── file.service.ts
+        │   │   ├── subarea.service.ts
+        │   │   └── auth.service.ts
+        │   ├── directives/
+        │   │   └── permission.directive.ts
+        │   └── utils/
+        │       ├── permissions.helper.ts
+        │       ├── file-helpers.ts
+        │       └── formatters.ts
+        ├── assets/
+        │   ├── images/
+        │   │   └── icons/
+        │   └── scss/
+        │       ├── _variables.scss
+        │       └── styles.scss
+        ├── environments/
+        │   ├── environment.ts
+        │   └── environment.prod.ts
+        ├── index.html
+        ├── main.ts
+        └── styles.scss
+                </code></pre>
+            </div>
+
+            <h3>Componentes Principales</h3>
+            <ul>
+                <li><strong>SideMenuComponent:</strong> Componente que renderiza el menú lateral dinámico basado en los permisos del usuario.</li>
+                <li><strong>SampleFilesListComponent:</strong> Conjunto de componentes para mostrar, añadir y eliminar archivos de ejemplo asociados a subáreas.</li>
+                <li><strong>FileUploaderComponent:</strong> Componente reutilizable para subir archivos con capacidad de mostrar progreso y validaciones.</li>
+                <li><strong>PermissionDirective:</strong> Directiva Angular que controla la visibilidad de elementos según los permisos del usuario.</li>
+            </ul>
+            
+            <h3>Tecnologías Utilizadas</h3>
+            <ul>
+                <li><strong>Angular:</strong> Framework principal para el desarrollo de la interfaz de usuario.</li>
+                <li><strong>Angular Router:</strong> Para la navegación entre páginas de la aplicación.</li>
+                <li><strong>RxJS:</strong> Biblioteca para programación reactiva con Observables.</li>
+                <li><strong>HttpClient:</strong> Módulo de Angular para realizar solicitudes HTTP.</li>
+                <li><strong>Angular Material:</strong> Biblioteca de componentes UI para Angular.</li>
+                <li><strong>NgRx:</strong> Framework para gestión del estado de la aplicación siguiendo el patrón Redux.</li>
+                <li><strong>SCSS:</strong> Preprocesador CSS para estilos avanzados.</li>
+                <li><strong>Font Awesome:</strong> Biblioteca de iconos para la interfaz gráfica.</li>
+            </ul>
+        </section>
+
+        <section id="apis">
+            <h2>APIs para la Implementación Frontend</h2>
+            
+            <h3>Endpoints de Menú</h3>
+            <p>El frontend se comunica con el backend a través de los siguientes endpoints REST para gestionar el menú dinámico:</p>
+            
+            <div class="code-snippet">
+                <pre><code>
+// GET /api/menu
+// Obtiene el menú dinámico según los permisos del usuario autenticado
+// Response: { success: true, data: [menuItems] }
+// menuItems es un array de objetos con estructura jerárquica (padres/hijos)
+
+// POST /api/menu
+// Crea un nuevo ítem de menú (solo admin)
+// Body: { name, url, icon, permissionCode, parent, order }
+// Response: { success: true, data: menuItem }
+
+// PUT /api/menu/:id
+// Actualiza un ítem de menú existente (solo admin)
+// Body: { name?, url?, icon?, permissionCode?, parent?, order?, active? }
+// Response: { success: true, data: menuItem }
+
+// DELETE /api/menu/:id
+// Elimina un ítem de menú (solo admin)
+// Response: { success: true, data: {} }
+
+// POST /api/menu/default
+// Crea elementos de menú predeterminados (solo admin)
+// Response: { success: true, data: [menuItems] }
+                </code></pre>
+            </div>
+            
+            <h3>Endpoints de Archivos de Ejemplo</h3>
+            <p>Para gestionar los archivos de ejemplo de subáreas, el frontend utiliza los siguientes endpoints:</p>
+            
+            <div class="code-snippet">
+                <pre><code>
+// GET /api/subareas/:id/sample-files
+// Obtiene todos los archivos de ejemplo de una subárea
+// Response: { success: true, data: [sampleFiles] }
+
+// POST /api/subareas/:id/sample-files
+// Añade un archivo de ejemplo a una subárea
+// Body: { fileId, name, description }
+// Response: { success: true, data: subarea }
+
+// DELETE /api/subareas/:id/sample-files/:fileId
+// Elimina un archivo de ejemplo de una subárea
+// Response: { success: true, data: {} }
+
+// GET /api/files/:id/download
+// Descarga un archivo específico (usado para descargar los archivos de ejemplo)
+// Response: Stream del archivo para descarga
+                </code></pre>
+            </div>
+            
+            <h3>Integración con el Sistema de Autenticación</h3>
+            <p>Todas las peticiones a las APIs requieren autenticación mediante token JWT. Angular utiliza interceptores HTTP para incluir este token en las cabeceras:</p>
+            
+            <div class="code-snippet">
+                <pre><code>
+// app/core/interceptors/auth.interceptor.ts
+import { Injectable } from '@angular/core';
+import {
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpInterceptor,
+  HttpErrorResponse
+} from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    // Obtener token de autenticación
+    const token = this.authService.getToken();
+    
+    if (token) {
+      // Clonar la solicitud y añadir el token de autenticación
+      request = request.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+    
+    // Pasar la solicitud al siguiente manejador
+    return next.handle(request).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // Manejar errores de autenticación (401)
+        if (error.status === 401) {
+          this.authService.logout();
+          this.router.navigate(['/login']);
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+}
+                </code></pre>
+            </div>
+            
+            <p>Y se registra en el módulo principal de la aplicación:</p>
+            
+            <div class="code-snippet">
+                <pre><code>
+// app/app.module.ts
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+
+// Otros imports...
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    // Otros componentes...
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    HttpClientModule,
+    // Otros módulos...
+  ],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+                </code></pre>
+            </div>
+        </section>
+
+        <section id="db">
+            <h2>Modelo de Datos</h2>
+            
+            <h3>Actualización del Modelo SubArea</h3>
+            <p>Se agregó un campo <code>sampleFiles</code> al modelo SubArea:</p>
+            <div class="code-snippet">
+                <pre><code>
+// Schema de SubArea (extracto)
+{
+  // Campos existentes...
+  
+  sampleFiles: [{
+    fileId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'File'
+    },
+    name: String,
+    description: String
+  }]
+}
+                </code></pre>
+            </div>
+
+            <h3>Nuevos Permisos</h3>
+            <p>Se añadieron nuevos permisos al sistema para controlar el acceso al menú y a los archivos de ejemplo:</p>
+            <div class="code-snippet">
+                <pre><code>
+// Permisos de menú a agregar en la base de datos
+[
+  {
+    name: 'Acceso Menú Administración',
+    description: 'Acceso al menú de administración general',
+    code: 'menu_admin',
+    category: 'system',
+    actions: ['read']
+  },
+  {
+    name: 'Acceso Menú Compañía',
+    description: 'Acceso al menú de gestión de compañía',
+    code: 'menu_company',
+    category: 'system',
+    actions: ['read']
+  },
+  // Resto de permisos de menú...
+]
+
+// Permisos de archivos de ejemplo
+[
+  {
+    name: 'Crear Archivos de Ejemplo',
+    description: 'Crear archivos de ejemplo para subáreas',
+    code: 'sample_file_create',
+    category: 'file',
+    actions: ['create']
+  },
+  // Resto de permisos de archivos de ejemplo...
+]
+                </code></pre>
+            </div>
+
+            <h3>Modelo de Menú</h3>
+            <p>Se creará un modelo para gestionar la estructura del menú y sus permisos asociados:</p>
+            <div class="code-snippet">
+                <pre><code>
+// Modelo Menu.js
+const mongoose = require('mongoose');
+
+const MenuItemSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  url: String,
+  icon: String,
+  permissionCode: {
+    type: String,
+    required: true
+  },
+  order: {
+    type: Number,
+    default: 0
+  },
+  parent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MenuItem',
+    default: null
+  },
+  children: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MenuItem'
+  }],
+  active: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true
+});
+
+module.exports = mongoose.model('MenuItem', MenuItemSchema);
+                </code></pre>
+            </div>
+        </section>
+
+        <section id="menu">
+            <h2>Implementación del Menú Dinámico</h2>
+            
+            <h3>Servicios de Comunicación con la API</h3>
+            <p>Implementación del servicio para comunicarse con el backend usando Angular:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/services/menu.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+import { MenuItem } from '../core/models/menu-item.model';
+import { ApiResponse } from '../core/models/api-response.model';
+import { ErrorHandlerService } from './error-handler.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class MenuService {
+  private apiUrl = `${environment.apiUrl}/menu`;
+
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
+
+  /**
+   * Obtiene los elementos del menú según los permisos del usuario
+   */
+  getMenuItems(): Observable<MenuItem[]> {
+    return this.http.get<ApiResponse<MenuItem[]>>(this.apiUrl)
+      .pipe(
+        map(response => response.data || []),
+        catchError(this.errorHandler.handleError('Obtener elementos del menú'))
+      );
+  }
+
+  /**
+   * Crea un nuevo elemento de menú (solo admin)
+   */
+  createMenuItem(menuItem: Partial<MenuItem>): Observable<MenuItem> {
+    return this.http.post<ApiResponse<MenuItem>>(this.apiUrl, menuItem)
+      .pipe(
+        map(response => response.data),
+        catchError(this.errorHandler.handleError('Crear elemento de menú'))
+      );
+  }
+
+  /**
+   * Actualiza un elemento de menú existente (solo admin)
+   */
+  updateMenuItem(id: string, menuItem: Partial<MenuItem>): Observable<MenuItem> {
+    return this.http.put<ApiResponse<MenuItem>>(`${this.apiUrl}/${id}`, menuItem)
+      .pipe(
+        map(response => response.data),
+        catchError(this.errorHandler.handleError('Actualizar elemento de menú'))
+      );
+  }
+
+  /**
+   * Elimina un elemento de menú (solo admin)
+   */
+  deleteMenuItem(id: string): Observable<void> {
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/${id}`)
+      .pipe(
+        map(() => void 0),
+        catchError(this.errorHandler.handleError('Eliminar elemento de menú'))
+      );
+  }
+
+  /**
+   * Crea elementos de menú predeterminados (solo admin)
+   */
+  createDefaultMenuItems(): Observable<MenuItem[]> {
+    return this.http.post<ApiResponse<MenuItem[]>>(`${this.apiUrl}/default`, {})
+      .pipe(
+        map(response => response.data || []),
+        catchError(this.errorHandler.handleError('Crear elementos de menú predeterminados'))
+      );
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Modelo para los Elementos del Menú</h3>
+            <p>Interfaz TypeScript para los elementos del menú:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/core/models/menu-item.model.ts
+export interface MenuItem {
+  _id: string;
+  name: string;
+  url?: string;
+  icon?: string;
+  permissionCode: string;
+  order?: number;
+  parent?: string | null;
+  children?: MenuItem[];
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+                </code></pre>
+            </div>
+
+            <h3>Directiva de Permisos</h3>
+            <p>Directiva para controlar la visibilidad de elementos según permisos:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/directives/permission.directive.ts
+import { Directive, Input, TemplateRef, ViewContainerRef, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
+
+@Directive({
+  selector: '[appHasPermission]'
+})
+export class PermissionDirective implements OnInit, OnDestroy {
+  @Input('appHasPermission') permission: string | string[] = [];
+  
+  private destroy$ = new Subject<void>();
+  private hasView = false;
+
+  constructor(
+    private templateRef: TemplateRef<any>,
+    private viewContainer: ViewContainerRef,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit(): void {
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        this.updateView(user);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private updateView(user: any): void {
+    const permissions = Array.isArray(this.permission) 
+      ? this.permission 
+      : [this.permission];
+    
+    const hasPermission = user && permissions.some(p => 
+      user.permissions && user.permissions.includes(p)
+    );
+
+    if (hasPermission && !this.hasView) {
+      this.viewContainer.createEmbeddedView(this.templateRef);
+      this.hasView = true;
+    } else if (!hasPermission && this.hasView) {
+      this.viewContainer.clear();
+      this.hasView = false;
+    }
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Componente de Menú Lateral</h3>
+            <p>Implementación del componente principal del menú en Angular:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/components/layout/side-menu/side-menu.component.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { MenuService } from '../../../services/menu.service';
+import { MenuItem } from '../../../core/models/menu-item.model';
+import { Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-side-menu',
+  templateUrl: './side-menu.component.html',
+  styleUrls: ['./side-menu.component.scss']
+})
+export class SideMenuComponent implements OnInit, OnDestroy {
+  menuItems: MenuItem[] = [];
+  menuTree: MenuItem[] = [];
+  loading = true;
+  error: string | null = null;
+  currentRoute: string = '';
+  
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private menuService: MenuService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    // Cargar elementos del menú
+    this.loadMenu();
+    
+    // Suscribirse a cambios en la ruta
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
+    ).subscribe((event: any) => {
+      this.currentRoute = event.urlAfterRedirects;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadMenu(): void {
+    this.loading = true;
+    this.error = null;
+    
+    this.menuService.getMenuItems()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (items) => {
+          this.menuItems = items;
+          this.menuTree = this.buildMenuTree(items);
+          this.loading = false;
+        },
+        error: (err) => {
+          this.error = 'Error al cargar el menú';
+          this.loading = false;
+          console.error('Error cargando menú:', err);
+        }
+      });
+  }
+
+  /**
+   * Construye una estructura jerárquica de elementos de menú
+   */
+  private buildMenuTree(items: MenuItem[]): MenuItem[] {
+    const itemsMap = new Map<string, MenuItem>();
+    
+    // Crear mapa para acceso rápido
+    items.forEach(item => {
+      itemsMap.set(item._id, { ...item, children: [] });
+    });
+    
+    // Construir árbol
+    const rootItems: MenuItem[] = [];
+    
+    itemsMap.forEach(item => {
+      if (item.parent) {
+        const parent = itemsMap.get(item.parent);
+        if (parent) {
+          parent.children = parent.children || [];
+          parent.children.push(item);
+        }
+      } else {
+        rootItems.push(item);
+      }
+    });
+    
+    // Ordenar elementos por propiedad 'order'
+    return this.sortMenuItems(rootItems);
+  }
+
+  /**
+   * Ordena los elementos del menú y sus hijos recursivamente
+   */
+  private sortMenuItems(items: MenuItem[]): MenuItem[] {
+    return items
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(item => {
+        if (item.children && item.children.length > 0) {
+          return { ...item, children: this.sortMenuItems(item.children) };
+        }
+        return item;
+      });
+  }
+
+  /**
+   * Verifica si una ruta está activa
+   */
+  isActiveRoute(url: string | undefined): boolean {
+    if (!url) return false;
+    return this.currentRoute === url || this.currentRoute.startsWith(`${url}/`);
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Plantilla del Menú Lateral</h3>
+            <p>Template HTML para el componente de menú:</p>
+            <div class="code-snippet">
+                <pre><code>
+&lt;!-- app/components/layout/side-menu/side-menu.component.html --&gt;
+&lt;div class="side-menu" [class.loading]="loading" [class.error]="error"&gt;
+  &lt;!-- Encabezado del menú --&gt;
+  &lt;div class="menu-header"&gt;
+    &lt;div class="logo"&gt;
+      &lt;img src="assets/images/logo.svg" alt="Logo"&gt;
+      &lt;span&gt;GestDoc&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- Estados de carga/error --&gt;
+  &lt;ng-container *ngIf="loading"&gt;
+    &lt;div class="menu-loading"&gt;
+      &lt;app-loading-spinner&gt;&lt;/app-loading-spinner&gt;
+      &lt;span&gt;Cargando menú...&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/ng-container&gt;
+  
+  &lt;ng-container *ngIf="error"&gt;
+    &lt;div class="error-message"&gt;
+      &lt;i class="fas fa-exclamation-circle"&gt;&lt;/i&gt;
+      &lt;span&gt;Error al cargar el menú&lt;/span&gt;
+      &lt;small&gt;Intente nuevamente más tarde&lt;/small&gt;
+      &lt;button mat-button color="primary" (click)="loadMenu()"&gt;Reintentar&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/ng-container&gt;
+  
+  &lt;!-- Contenido del menú --&gt;
+  &lt;div class="menu-content" *ngIf="!loading && !error"&gt;
+    &lt;app-menu-items [items]="menuTree" [currentRoute]="currentRoute"&gt;&lt;/app-menu-items&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- Pie del menú --&gt;
+  &lt;div class="menu-footer"&gt;
+    &lt;a [routerLink]="['/settings']" [class.active]="isActiveRoute('/settings')"&gt;
+      &lt;i class="fas fa-cog"&gt;&lt;/i&gt;
+      &lt;span&gt;Configuración&lt;/span&gt;
+    &lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+                </code></pre>
+            </div>
+
+            <h3>Componente para Ítems del Menú</h3>
+            <p>Componente hijo para renderizar los elementos del menú de forma recursiva:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/components/layout/side-menu/menu-items.component.ts
+import { Component, Input } from '@angular/core';
+import { MenuItem } from '../../../core/models/menu-item.model';
+
+@Component({
+  selector: 'app-menu-items',
+  templateUrl: './menu-items.component.html',
+  styleUrls: ['./menu-items.component.scss']
+})
+export class MenuItemsComponent {
+  @Input() items: MenuItem[] = [];
+  @Input() currentRoute: string = '';
+  
+  expandedItems: { [key: string]: boolean } = {};
+  
+  /**
+   * Alterna la expansión de un ítem de menú
+   */
+  toggleExpand(itemId: string): void {
+    this.expandedItems[itemId] = !this.expandedItems[itemId];
+  }
+  
+  /**
+   * Verifica si un ítem está expandido
+   */
+  isExpanded(itemId: string): boolean {
+    return !!this.expandedItems[itemId];
+  }
+  
+  /**
+   * Verifica si una ruta está activa
+   */
+  isActiveRoute(url: string | undefined): boolean {
+    if (!url) return false;
+    return this.currentRoute === url || this.currentRoute.startsWith(`${url}/`);
+  }
+  
+  /**
+   * Verifica si algún hijo de un ítem está activo
+   */
+  hasActiveChild(item: MenuItem): boolean {
+    if (!item.children || item.children.length === 0) {
+      return false;
+    }
+    
+    return item.children.some(child => 
+      this.isActiveRoute(child.url) || this.hasActiveChild(child)
+    );
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Plantilla para Ítems del Menú</h3>
+            <p>Template HTML para el componente de ítems del menú:</p>
+            <div class="code-snippet">
+                <pre><code>
+&lt;!-- app/components/layout/side-menu/menu-items.component.html --&gt;
+&lt;div class="menu-items-container"&gt;
+  &lt;ng-container *ngFor="let item of items"&gt;
+    &lt;!-- Clase condicional para elementos activos y con hijos --&gt;
+    &lt;div class="menu-item" 
+         [class.active]="isActiveRoute(item.url)"
+         [class.has-active-child]="hasActiveChild(item)"
+         [class.has-children]="item.children?.length"
+         [class.expanded]="isExpanded(item._id)"&gt;
+      
+      &lt;!-- Grupo de menú con hijos --&gt;
+      &lt;ng-container *ngIf="item.children?.length; else singleItem"&gt;
+        &lt;div class="menu-group-header" (click)="toggleExpand(item._id)"&gt;
+          &lt;div class="menu-item-content"&gt;
+            &lt;i class="fas fa-{{item.icon || 'circle'}}"&gt;&lt;/i&gt;
+            &lt;span&gt;{{item.name}}&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;i class="fas" 
+             [class.fa-chevron-down]="isExpanded(item._id)"
+             [class.fa-chevron-right]="!isExpanded(item._id)"&gt;&lt;/i&gt;
+        &lt;/div&gt;
+        
+        &lt;!-- Subítems (recursión) --&gt;
+        &lt;div class="menu-subitems" *ngIf="isExpanded(item._id)"&gt;
+          &lt;app-menu-items 
+            [items]="item.children" 
+            [currentRoute]="currentRoute"&gt;
+          &lt;/app-menu-items&gt;
+        &lt;/div&gt;
+      &lt;/ng-container&gt;
+      
+      &lt;!-- Elemento simple sin hijos --&gt;
+      &lt;ng-template #singleItem&gt;
+        &lt;a [routerLink]="item.url" class="menu-link"&gt;
+          &lt;i class="fas fa-{{item.icon || 'circle'}}"&gt;&lt;/i&gt;
+          &lt;span&gt;{{item.name}}&lt;/span&gt;
+        &lt;/a&gt;
+      &lt;/ng-template&gt;
+    &lt;/div&gt;
+  &lt;/ng-container&gt;
+&lt;/div&gt;
+                </code></pre>
+            </div>
+
+            <h3>Estilos SCSS del Menú</h3>
+            <p>Estilos para el menú lateral y sus componentes:</p>
+            <div class="code-snippet">
+                <pre><code>
+/* app/components/layout/side-menu/side-menu.component.scss */
+:host {
+  display: block;
+}
+
+.side-menu {
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+  height: 100vh;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  transition: width 0.3s ease;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  
+  &.collapsed {
+    width: 70px;
+    
+    .logo span {
+      display: none;
+    }
+    
+    .menu-item span {
+      display: none;
+    }
+  }
+}
+
+.menu-header {
+  padding: 20px 15px;
+  border-bottom: 1px solid #34495e;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  
+  img {
+    height: 30px;
+    width: auto;
+  }
+}
+
+.menu-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.menu-footer {
+  padding: 15px;
+  border-top: 1px solid #34495e;
+  
+  a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ecf0f1;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: #34495e;
+    }
+    
+    &.active {
+      background-color: #3498db;
+    }
+  }
+}
+
+// Estados de carga y error
+.menu-loading,
+.side-menu.error {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.error-message {
+  color: #e74c3c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  
+  i {
+    font-size: 2rem;
+  }
+}
+
+// Media queries para responsive
+@media (max-width: 768px) {
+  .side-menu {
+    transform: translateX(-100%);
+    width: 250px;
+    
+    &.open {
+      transform: translateX(0);
+    }
+  }
+  
+  .menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+    
+    &.visible {
+      display: block;
+    }
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Helper de Permisos</h3>
+            <p>Clase de utilidad para verificar permisos:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/utils/permissions.helper.ts
+import { Injectable } from '@angular/core';
+import { User } from '../core/models/user.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PermissionsHelper {
+  /**
+   * Verifica si un usuario tiene un permiso específico
+   * @param user - El objeto de usuario actual
+   * @param permissionCode - El código del permiso a verificar
+   * @returns true si el usuario tiene el permiso, false en caso contrario
+   */
+  hasPermission(user: User | null, permissionCode: string): boolean {
+    if (!user || !user.permissions || !permissionCode) {
+      return false;
+    }
+    
+    return user.permissions.includes(permissionCode);
+  }
+  
+  /**
+   * Verifica si un usuario tiene al menos uno de los permisos especificados
+   * @param user - El objeto de usuario actual
+   * @param permissions - Array de códigos de permisos a verificar
+   * @returns true si el usuario tiene al menos uno de los permisos, false en caso contrario
+   */
+  hasAnyPermission(user: User | null, permissions: string[]): boolean {
+    if (!user || !user.permissions || !permissions.length) {
+      return false;
+    }
+    
+    return permissions.some(permission => user.permissions.includes(permission));
+  }
+  
+  /**
+   * Verifica si un usuario tiene todos los permisos especificados
+   * @param user - El objeto de usuario actual
+   * @param permissions - Array de códigos de permisos a verificar
+   * @returns true si el usuario tiene todos los permisos, false en caso contrario
+   */
+  hasAllPermissions(user: User | null, permissions: string[]): boolean {
+    if (!user || !user.permissions || !permissions.length) {
+      return false;
+    }
+    
+    return permissions.every(permission => user.permissions.includes(permission));
+  }
+}
+                </code></pre>
+            </div>
+        </section>
+
+        <section id="archivos">
+            <h2>Implementación de Archivos de Ejemplo</h2>
+            
+            <h3>Servicios para Gestión de Archivos</h3>
+            <p>Servicios para comunicación con la API de archivos de ejemplo en Angular:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/services/file.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpEventType } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+import { ApiResponse } from '../core/models/api-response.model';
+import { SampleFile } from '../core/models/sample-file.model';
+import { FileUploadProgress } from '../core/models/file-upload-progress.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FileService {
+  private apiUrl = environment.apiUrl;
+
+  constructor(private http: HttpClient) {}
+
+  /**
+   * Sube un archivo al servidor con seguimiento de progreso
+   */
+  uploadFile(formData: FormData): Observable<FileUploadProgress> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/files/upload`,
+      formData,
+      {
+        reportProgress: true,
+        observe: 'events'
+      }
+    ).pipe(
+      map(event => {
+        let result: FileUploadProgress = { progress: 0 };
+        
+        switch (event.type) {
+          case HttpEventType.UploadProgress:
+            if (event.total) {
+              result.progress = Math.round(100 * event.loaded / event.total);
+            }
+            break;
+          case HttpEventType.Response:
+            result = { 
+              progress: 100,
+              data: event.body?.data
+            };
+            break;
+        }
+        
+        return result;
+      }),
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene todos los archivos de ejemplo de una subárea
+   */
+  getSampleFiles(subareaId: string): Observable<SampleFile[]> {
+    return this.http.get<ApiResponse<SampleFile[]>>(
+      `${this.apiUrl}/subareas/${subareaId}/sample-files`
+    ).pipe(
+      map(response => response.data || []),
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Añade un archivo de ejemplo a una subárea
+   */
+  addSampleFile(subareaId: string, fileData: {
+    fileId: string,
+    name: string,
+    description?: string
+  }): Observable<any> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/subareas/${subareaId}/sample-files`,
+      fileData
+    ).pipe(
+      map(response => response.data),
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Elimina un archivo de ejemplo de una subárea
+   */
+  removeSampleFile(subareaId: string, fileId: string): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(
+      `${this.apiUrl}/subareas/${subareaId}/sample-files/${fileId}`
+    ).pipe(
+      map(() => void 0),
+      catchError(error => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Descarga un archivo
+   */
+  downloadFile(fileId: string): void {
+    const token = localStorage.getItem('auth_token');
+    window.location.href = `${this.apiUrl}/files/${fileId}/download?token=${token}`;
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Componente de Lista de Archivos de Ejemplo</h3>
+            <p>Componente Angular para mostrar la lista de archivos de ejemplo de una subárea:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/components/files/sample-files/sample-files-list.component.ts
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
+import { FileService } from '../../../services/file.service';
+import { AuthService } from '../../../services/auth.service';
+import { PermissionsHelper } from '../../../utils/permissions.helper';
+import { SampleFile } from '../../../core/models/sample-file.model';
+import { FileUploaderComponent } from '../file-uploader/file-uploader.component';
+
+@Component({
+  selector: 'app-sample-files-list',
+  templateUrl: './sample-files-list.component.html',
+  styleUrls: ['./sample-files-list.component.scss']
+})
+export class SampleFilesListComponent implements OnInit, OnDestroy {
+  @Input() subareaId!: string;
+  @Input() subareaName?: string;
+  
+  sampleFiles: SampleFile[] = [];
+  loading = true;
+  error: string | null = null;
+  
+  // Permisos
+  canCreate = false;
+  canDelete = false;
+  
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private fileService: FileService,
+    private authService: AuthService,
+    private permissionsHelper: PermissionsHelper,
+    private dialog: MatDialog
+  ) {}
+
+  ngOnInit(): void {
+    // Verificar permisos
+    this.authService.currentUser$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
+      this.canCreate = this.permissionsHelper.hasPermission(user, 'sample_file_create');
+      this.canDelete = this.permissionsHelper.hasPermission(user, 'sample_file_delete');
+    });
+    
+    // Cargar archivos de ejemplo
+    this.loadSampleFiles();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Carga los archivos de ejemplo de la subárea
+   */
+  loadSampleFiles(): void {
+    if (!this.subareaId) {
+      this.error = 'ID de subárea no válido';
+      this.loading = false;
+      return;
+    }
+    
+    this.loading = true;
+    this.error = null;
+    
+    this.fileService.getSampleFiles(this.subareaId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (files) => {
+          this.sampleFiles = files;
+          this.loading = false;
+        },
+        error: (err) => {
+          this.error = 'Error al cargar archivos de ejemplo';
+          this.loading = false;
+          console.error('Error cargando archivos de ejemplo:', err);
+        }
+      });
+  }
+
+  /**
+   * Abre el modal para subir un nuevo archivo de ejemplo
+   */
+  openFileUploader(): void {
+    const dialogRef = this.dialog.open(FileUploaderComponent, {
+      width: '500px',
+      data: {
+        title: 'Subir Archivo de Ejemplo',
+        allowedTypes: ['.xlsx', '.xls', '.csv', '.doc', '.docx', '.pdf'],
+        maxSize: 10 * 1024 * 1024, // 10MB
+        requestDescription: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.addSampleFile(result);
+      }
+    });
+  }
+
+  /**
+   * Añade un archivo como ejemplo a la subárea
+   */
+  private addSampleFile(fileData: any): void {
+    this.fileService.addSampleFile(this.subareaId, {
+      fileId: fileData.id,
+      name: fileData.name,
+      description: fileData.description
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: () => {
+        this.loadSampleFiles(); // Recargar la lista
+      },
+      error: (err) => {
+        this.error = 'Error al añadir archivo de ejemplo';
+        console.error('Error añadiendo archivo de ejemplo:', err);
+      }
+    });
+  }
+
+  /**
+   * Elimina un archivo de ejemplo
+   */
+  removeSampleFile(fileId: string): void {
+    if (confirm('¿Está seguro de eliminar este archivo de ejemplo?')) {
+      this.fileService.removeSampleFile(this.subareaId, fileId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.loadSampleFiles(); // Recargar la lista
+          },
+          error: (err) => {
+            this.error = 'Error al eliminar archivo de ejemplo';
+            console.error('Error eliminando archivo de ejemplo:', err);
+          }
+        });
+    }
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Plantilla de Lista de Archivos de Ejemplo</h3>
+            <p>Template HTML para el componente de lista de archivos:</p>
+            <div class="code-snippet">
+                <pre><code>
+&lt;!-- app/components/files/sample-files/sample-files-list.component.html --&gt;
+&lt;div class="sample-files-container"&gt;
+  &lt;div class="sample-files-header"&gt;
+    &lt;h2&gt;
+      Archivos de Ejemplo
+      &lt;span *ngIf="subareaName"&gt; - {{subareaName}}&lt;/span&gt;
+    &lt;/h2&gt;
+    
+    &lt;button mat-raised-button color="primary" 
+            *ngIf="canCreate"
+            (click)="openFileUploader()"&gt;
+      &lt;mat-icon&gt;add&lt;/mat-icon&gt;
+      Añadir Archivo de Ejemplo
+    &lt;/button&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- Loader --&gt;
+  &lt;div class="sample-files-loading" *ngIf="loading"&gt;
+    &lt;mat-spinner diameter="40"&gt;&lt;/mat-spinner&gt;
+    &lt;span&gt;Cargando archivos de ejemplo...&lt;/span&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- Error --&gt;
+  &lt;div class="sample-files-error" *ngIf="error"&gt;
+    &lt;div class="error-message"&gt;
+      &lt;mat-icon color="warn"&gt;error&lt;/mat-icon&gt;
+      &lt;span&gt;{{error}}&lt;/span&gt;
+      &lt;button mat-button color="primary" (click)="loadSampleFiles()"&gt;Reintentar&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- Lista de archivos --&gt;
+  &lt;ng-container *ngIf="!loading && !error"&gt;
+    &lt;div class="sample-files-grid" *ngIf="sampleFiles.length; else noFiles"&gt;
+      &lt;app-sample-file-item 
+        *ngFor="let file of sampleFiles"
+        [file]="file"
+        [canDelete]="canDelete"
+        (delete)="removeSampleFile($event)"&gt;
+      &lt;/app-sample-file-item&gt;
+    &lt;/div&gt;
+    
+    &lt;!-- Mensaje si no hay archivos --&gt;
+    &lt;ng-template #noFiles&gt;
+      &lt;div class="sample-files-empty"&gt;
+        &lt;mat-icon&gt;description&lt;/mat-icon&gt;
+        &lt;p&gt;No hay archivos de ejemplo disponibles para esta subárea.&lt;/p&gt;
+        &lt;button mat-stroked-button color="primary" 
+                *ngIf="canCreate"
+                (click)="openFileUploader()"&gt;
+          Añadir primer archivo de ejemplo
+        &lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/ng-template&gt;
+  &lt;/ng-container&gt;
+&lt;/div&gt;
+                </code></pre>
+            </div>
+
+            <h3>Componente de Ítem de Archivo de Ejemplo</h3>
+            <p>Componente Angular para un archivo de ejemplo individual:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/components/files/sample-files/sample-file-item.component.ts
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { FileService } from '../../../services/file.service';
+import { FileHelpers } from '../../../utils/file-helpers';
+import { SampleFile } from '../../../core/models/sample-file.model';
+
+@Component({
+  selector: 'app-sample-file-item',
+  templateUrl: './sample-file-item.component.html',
+  styleUrls: ['./sample-file-item.component.scss']
+})
+export class SampleFileItemComponent {
+  @Input() file!: SampleFile;
+  @Input() canDelete = false;
+  @Output() delete = new EventEmitter<string>();
+  
+  deleting = false;
+  
+  constructor(
+    private fileService: FileService,
+    public fileHelpers: FileHelpers
+  ) {}
+  
+  /**
+   * Obtiene el icono correspondiente al tipo de archivo
+   */
+  get fileIcon(): string {
+    return this.fileHelpers.getFileIconByExtension(this.file.name);
+  }
+  
+  /**
+   * Obtiene el tamaño formateado del archivo
+   */
+  get fileSize(): string {
+    return this.file.size ? 
+      this.fileHelpers.getFileSizeLabel(this.file.size) : 
+      'Desconocido';
+  }
+  
+  /**
+   * Inicia la descarga del archivo
+   */
+  downloadFile(event: Event): void {
+    event.preventDefault();
+    this.fileService.downloadFile(this.file.fileId);
+  }
+  
+  /**
+   * Elimina el archivo de ejemplo
+   */
+  deleteFile(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!this.deleting) {
+      this.deleting = true;
+      this.delete.emit(this.file._id);
+      setTimeout(() => this.deleting = false, 500); // Prevenir doble clic
+    }
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Plantilla de Ítem de Archivo de Ejemplo</h3>
+            <p>Template HTML para el componente de ítem de archivo:</p>
+            <div class="code-snippet">
+                <pre><code>
+&lt;!-- app/components/files/sample-files/sample-file-item.component.html --&gt;
+&lt;div class="sample-file-item" (click)="downloadFile($event)"&gt;
+  &lt;div class="sample-file-card"&gt;
+    &lt;div class="sample-file-icon"&gt;
+      &lt;i class="fas fa-file-{{fileIcon}}"&gt;&lt;/i&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="sample-file-info"&gt;
+      &lt;h3 class="sample-file-name" [title]="file.name"&gt;
+        {{file.name}}
+      &lt;/h3&gt;
+      
+      &lt;p *ngIf="file.description" class="sample-file-description" [title]="file.description"&gt;
+        {{file.description}}
+      &lt;/p&gt;
+      
+      &lt;div class="sample-file-meta"&gt;
+        &lt;span class="sample-file-type"&gt;
+          {{file.name | fileExt | uppercase}}
+        &lt;/span&gt;
+        
+        &lt;span *ngIf="file.size" class="sample-file-size"&gt;
+          {{fileSize}}
+        &lt;/span&gt;
+        
+        &lt;span *ngIf="file.updatedAt" class="sample-file-date"&gt;
+          {{file.updatedAt | date:'dd/MM/yyyy'}}
+        &lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="sample-file-actions"&gt;
+      &lt;button mat-icon-button color="primary" 
+              matTooltip="Descargar archivo"
+              (click)="downloadFile($event)"&gt;
+        &lt;mat-icon&gt;download&lt;/mat-icon&gt;
+      &lt;/button&gt;
+      
+      &lt;button *ngIf="canDelete" 
+              mat-icon-button color="warn" 
+              matTooltip="Eliminar archivo"
+              [disabled]="deleting"
+              (click)="deleteFile($event)"&gt;
+        &lt;mat-icon&gt;{{deleting ? 'hourglass_empty' : 'delete'}}&lt;/mat-icon&gt;
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+                </code></pre>
+            </div>
+
+            <h3>Componente de Carga de Archivos</h3>
+            <p>Componente Angular para subir archivos:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/components/files/file-uploader/file-uploader.component.ts
+import { Component, Inject, OnDestroy } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { FileService } from '../../../services/file.service';
+import { FileHelpers } from '../../../utils/file-helpers';
+
+@Component({
+  selector: 'app-file-uploader',
+  templateUrl: './file-uploader.component.html',
+  styleUrls: ['./file-uploader.component.scss']
+})
+export class FileUploaderComponent implements OnDestroy {
+  selectedFile: File | null = null;
+  description = '';
+  progress = 0;
+  error: string | null = null;
+  uploading = false;
+  
+  private destroy$ = new Subject<void>();
+  
+  constructor(
+    private fileService: FileService,
+    private fileHelpers: FileHelpers,
+    public dialogRef: MatDialogRef<FileUploaderComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: {
+      title: string;
+      requestDescription?: boolean;
+      allowedTypes?: string[];
+      maxSize?: number;
+    }
+  ) {}
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
+  /**
+   * Manejador para selección de archivo
+   */
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    
+    if (input.files && input.files.length) {
+      const file = input.files[0];
+      this.error = null;
+      
+      // Validar archivo
+      if (this.validateFile(file)) {
+        this.selectedFile = file;
+      } else {
+        this.selectedFile = null;
+        input.value = '';
+      }
+    }
+  }
+  
+  /**
+   * Valida que el archivo cumpla con los requisitos
+   */
+  private validateFile(file: File): boolean {
+    // Validar tamaño
+    const maxSize = this.data.maxSize || 5 * 1024 * 1024; // 5MB por defecto
+    if (file.size > maxSize) {
+      this.error = `El archivo excede el tamaño máximo permitido (${maxSize / 1024 / 1024}MB)`;
+      return false;
+    }
+    
+    // Validar tipo de archivo
+    if (this.data.allowedTypes && this.data.allowedTypes.length) {
+      const fileExt = this.fileHelpers.getFileExtension(file.name);
+      if (!this.data.allowedTypes.includes(fileExt)) {
+        this.error = `Tipo de archivo no permitido. Tipos aceptados: ${this.data.allowedTypes.join(', ')}`;
+        return false;
+      }
+    }
+    
+    return true;
+  }
+  
+  /**
+   * Inicia la carga del archivo
+   */
+  uploadFile(): void {
+    if (!this.selectedFile) {
+      this.error = 'Por favor seleccione un archivo para subir';
+      return;
+    }
+    
+    this.uploading = true;
+    this.progress = 0;
+    this.error = null;
+    
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+    
+    if (this.data.requestDescription && this.description) {
+      formData.append('description', this.description);
+    }
+    
+    this.fileService.uploadFile(formData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.progress = result.progress;
+          
+          if (result.data && result.progress === 100) {
+            // Archivo subido completamente
+            setTimeout(() => {
+              this.dialogRef.close({
+                id: result.data._id,
+                name: result.data.name,
+                description: this.description || result.data.description,
+                size: result.data.size,
+                type: result.data.mimeType
+              });
+            }, 500);
+          }
+        },
+        error: (err) => {
+          this.error = err.error?.error?.message || 'Error al subir el archivo';
+          this.uploading = false;
+          console.error('Error subiendo archivo:', err);
+        }
+      });
+  }
+  
+  /**
+   * Cierra el diálogo
+   */
+  cancel(): void {
+    this.dialogRef.close();
+  }
+}
+                </code></pre>
+            </div>
+
+            <h3>Utilidades para Archivos</h3>
+            <p>Clase de utilidad para trabajar con archivos:</p>
+            <div class="code-snippet">
+                <pre><code>
+// app/utils/file-helpers.ts
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FileHelpers {
+  /**
+   * Obtiene el icono correspondiente según la extensión del archivo
+   */
+  getFileIconByExtension(fileName: string): string {
+    if (!fileName) return 'alt';
+    
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    
+    const iconMap: {[key: string]: string} = {
+      // Documentos
+      'pdf': 'pdf',
+      'doc': 'word',
+      'docx': 'word',
+      'txt': 'alt',
+      'rtf': 'alt',
+      
+      // Hojas de cálculo
+      'xls': 'excel',
+      'xlsx': 'excel',
+      'csv': 'csv',
+      
+      // Presentaciones
+      'ppt': 'powerpoint',
+      'pptx': 'powerpoint',
+      
+      // Imágenes
+      'jpg': 'image',
+      'jpeg': 'image',
+      'png': 'image',
+      'gif': 'image',
+      'svg': 'image',
+      'bmp': 'image',
+      
+      // Comprimidos
+      'zip': 'archive',
+      'rar': 'archive',
+      '7z': 'archive',
+      'tar': 'archive',
+      'gz': 'archive',
+      
+      // Audio/Video
+      'mp3': 'audio',
+      'wav': 'audio',
+      'mp4': 'video',
+      'avi': 'video',
+      'mov': 'video',
+      
+      // Código
+      'html': 'code',
+      'css': 'code',
+      'js': 'code',
+      'json': 'code',
+      'xml': 'code',
+      'py': 'code',
+      'java': 'code'
+    };
+    
+    return iconMap[extension] || 'alt';
+  }
+  
+  /**
+   * Formatea el tamaño de archivo a una unidad legible
+   */
+  getFileSizeLabel(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+  
+  /**
+   * Obtiene la extensión de un archivo a partir de su nombre
+   */
+  getFileExtension(fileName: string): string {
+    if (!fileName) return '';
+    const parts = fileName.split('.');
+    return parts.length > 1 ? `.${parts.pop()?.toLowerCase()}` : '';
+  }
+  
+  /**
+   * Verifica si un tipo MIME corresponde a una imagen
+   */
+  isImageFile(mimeType: string): boolean {
+    return mimeType?.startsWith('image/') || false;
+  }
+}
+                </code></pre>
+            </div>
+        </section>
+
+        <section id="testing">
+            <h2>Pruebas y Validación</h2>
+            
+            <h3>Plan de Pruebas Frontend</h3>
+            <p>Para asegurar la calidad de la implementación frontend, se deben realizar las siguientes pruebas:</p>
+            
+            <h4>Pruebas Unitarias</h4>
+            <p>Código de ejemplo para pruebas unitarias con Jest y React Testing Library:</p>
+            <div class="code-snippet">
+                <pre><code>
+// __tests__/components/SideMenu.test.jsx
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { AuthContext } from '../../context/AuthContext';
+import SideMenu from '../../components/layout/SideMenu/SideMenu';
+import * as menuService from '../../services/menuService';
+
+// Mock del servicio de menú
+jest.mock('../../services/menuService');
+
+// Mock de un usuario con permisos
+const mockUser = {
+  _id: '123',
+  name: 'Usuario Test',
+  permissions: ['menu_admin', 'menu_company', 'dashboard_access']
+};
+
+// Mock de datos de menú de respuesta
+const mockMenuItems = [
+  {
+    _id: '1',
+    name: 'Dashboard',
+    url: '/dashboard',
+    icon: 'chart-pie',
+    permissionCode: 'dashboard_access',
+    children: []
+  },
+  {
+    _id: '2',
+    name: 'Administración',
+    icon: 'cogs',
+    permissionCode: 'menu_admin',
+    children: [
+      {
+        _id: '3',
+        name: 'Usuarios',
+        url: '/admin/users',
+        icon: 'users',
+        permissionCode: 'menu_admin',
+        parent: '2',
+        children: []
+      }
+    ]
+  }
+];
+
+// Configuración para React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+// Componente wrapper para las pruebas
+const renderWithProviders = (ui) => {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AuthContext.Provider value={{ user: mockUser }}>
+        <MemoryRouter>
+          {ui}
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </QueryClientProvider>
+  );
+};
+
+describe('SideMenu Component', () => {
+  beforeEach(() => {
+    // Limpiar todos los mocks antes de cada prueba
+    jest.clearAllMocks();
+  });
+  
+  test('muestra spinner de carga cuando está cargando el menú', async () => {
+    // Simular carga en progreso
+    menuService.getMenuItems.mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve({ data: mockMenuItems }), 100))
+    );
+    
+    renderWithProviders(<SideMenu />);
+    
+    // Verificar que se muestra el spinner de carga
+    expect(screen.getByText(/cargando menú/i)).toBeInTheDocument();
+  });
+  
+  test('muestra elementos de menú después de cargar', async () => {
+    // Simular respuesta exitosa
+    menuService.getMenuItems.mockResolvedValue({ data: mockMenuItems });
+    
+    renderWithProviders(<SideMenu />);
+    
+    // Esperar a que los elementos del menú se muestren
+    await waitFor(() => {
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('Administración')).toBeInTheDocument();
+    });
+  });
+  
+  test('muestra mensaje de error cuando falla la carga', async () => {
+    // Simular error en la petición
+    menuService.getMenuItems.mockRejectedValue(new Error('Error de conexión'));
+    
+    renderWithProviders(<SideMenu />);
+    
+    // Esperar a que se muestre el mensaje de error
+    await waitFor(() => {
+      expect(screen.getByText(/error al cargar el menú/i)).toBeInTheDocument();
+    });
+  });
+  
+  test('renderiza correctamente la estructura jerárquica del menú', async () => {
+    // Simular respuesta exitosa
+    menuService.getMenuItems.mockResolvedValue({ data: mockMenuItems });
+    
+    renderWithProviders(<SideMenu />);
+    
+    // Esperar a que los elementos del menú se muestren
+    await waitFor(() => {
+      // Verificar elemento raíz
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      
+      // Verificar elemento padre
+      expect(screen.getByText('Administración')).toBeInTheDocument();
+      
+      // Verificar que elemento hijo esté presente pero no visible inicialmente
+      const usuariosItem = screen.queryByText('Usuarios');
+      expect(usuariosItem).not.toBeVisible();
+    });
+  });
+});
+                </code></pre>
+            </div>
+            
+            <h4>Pruebas de Integración</h4>
+            <p>Ejemplo de prueba de integración para el componente de archivos de ejemplo:</p>
+            <div class="code-snippet">
+                <pre><code>
+// __tests__/integration/SampleFilesManager.test.jsx
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { AuthContext } from '../../context/AuthContext';
+import SampleFilesManager from '../../pages/Files/SampleFilesManager';
+import * as fileService from '../../services/fileService';
+import * as subareaService from '../../services/subareaService';
+
+// Mocks de servicios
+jest.mock('../../services/fileService');
+jest.mock('../../services/subareaService');
+
+// Configuración para React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+// Mock de un usuario con todos los permisos necesarios
+const mockUser = {
+  _id: '123',
+  name: 'Admin Test',
+  permissions: ['sample_file_read', 'sample_file_create', 'sample_file_delete']
+};
+
+// Mock de datos de subárea
+const mockSubarea = {
+  _id: 'sub123',
+  name: 'Subárea de Prueba',
+  description: 'Descripción de la subárea',
+  areaId: 'area456',
+  companyId: 'comp789'
+};
+
+// Mock de archivos de ejemplo
+const mockSampleFiles = [
+  {
+    _id: 'file1',
+    fileId: 'fileStorage1',
+    name: 'ejemplo_excel.xlsx',
+    description: 'Plantilla de reporte mensual',
+    size: 12345
+  },
+  {
+    _id: 'file2',
+    fileId: 'fileStorage2',
+    name: 'manual_usuario.pdf',
+    description: 'Manual de usuario para el sistema',
+    size: 98765
+  }
+];
+
+// Componente wrapper para pruebas
+const renderWithProviders = (ui, { route = '/subareas/sub123/sample-files' } = {}) => {
+  window.history.pushState({}, 'Test page', route);
+  
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AuthContext.Provider value={{ user: mockUser }}>
+        <MemoryRouter initialEntries={[route]}>
+          <Routes>
+            <Route path="/subareas/:id/sample-files" element={ui} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </QueryClientProvider>
+  );
+};
+
+describe('SampleFilesManager Integration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    
+    // Mock de respuestas por defecto
+    subareaService.getSubareaById.mockResolvedValue({
+      success: true,
+      data: mockSubarea
+    });
+    
+    fileService.getSampleFiles.mockResolvedValue({
+      success: true,
+      data: mockSampleFiles
+    });
+  });
+  
+  test('carga y muestra correctamente los archivos de ejemplo de una subárea', async () => {
+    renderWithProviders(<SampleFilesManager />);
+    
+    // Verificar que se llama a las APIs correctas
+    await waitFor(() => {
+      expect(subareaService.getSubareaById).toHaveBeenCalledWith('sub123');
+      expect(fileService.getSampleFiles).toHaveBeenCalledWith('sub123');
+    });
+    
+    // Verificar que se muestra el título con el nombre de la subárea
+    expect(screen.getByText(/subárea de prueba/i)).toBeInTheDocument();
+    
+    // Verificar que se muestran los archivos de ejemplo
+    expect(screen.getByText('ejemplo_excel.xlsx')).toBeInTheDocument();
+    expect(screen.getByText('manual_usuario.pdf')).toBeInTheDocument();
+    expect(screen.getByText('Plantilla de reporte mensual')).toBeInTheDocument();
+  });
+  
+  test('permite añadir un nuevo archivo de ejemplo', async () => {
+    // Mock para subir archivo
+    fileService.uploadFile.mockResolvedValue({
+      success: true,
+      data: {
+        _id: 'newFile123',
+        name: 'nuevo_ejemplo.xlsx',
+        size: 5678,
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
+    });
+    
+    // Mock para añadir archivo de ejemplo a subárea
+    fileService.addSampleFile.mockResolvedValue({
+      success: true,
+      data: {
+        ...mockSubarea,
+        sampleFiles: [
+          ...mockSampleFiles,
+          {
+            _id: 'file3',
+            fileId: 'newFile123',
+            name: 'nuevo_ejemplo.xlsx',
+            description: 'Nueva plantilla de ejemplo'
+          }
+        ]
+      }
+    });
+    
+    renderWithProviders(<SampleFilesManager />);
+    
+    // Esperar a que se carguen los datos iniciales
+    await waitFor(() => {
+      expect(screen.getByText('ejemplo_excel.xlsx')).toBeInTheDocument();
+    });
+    
+    // Hacer clic en botón para añadir archivo
+    fireEvent.click(screen.getByText(/añadir archivo de ejemplo/i));
+    
+    // Verificar que se muestra el modal de subida
+    expect(screen.getByText(/subir archivo de ejemplo/i)).toBeInTheDocument();
+    
+    // Simular selección de archivo y completar formulario
+    // (Nota: Esta parte es compleja en pruebas por las limitaciones de testing-library con inputs de tipo file)
+    // Aquí se hace una simulación simplificada
+    
+    // Simular envío del formulario
+    fireEvent.click(screen.getByText(/subir archivo/i));
+    
+    // Verificar que se llamaron a las APIs correctas
+    await waitFor(() => {
+      expect(fileService.uploadFile).toHaveBeenCalled();
+      expect(fileService.addSampleFile).toHaveBeenCalledWith('sub123', {
+        fileId: 'newFile123',
+        name: 'nuevo_ejemplo.xlsx',
+        description: expect.any(String)
+      });
+    });
+    
+    // Verificar que se recarga la lista de archivos
+    await waitFor(() => {
+      expect(fileService.getSampleFiles).toHaveBeenCalledTimes(2);
+    });
+  });
+  
+  // Más pruebas: eliminar archivo, manejo de errores, etc.
+});
+                </code></pre>
+            </div>
+            
+            <h4>Pruebas End-to-End</h4>
+            <p>Ejemplo de prueba E2E con Cypress para el flujo de trabajo con archivos de ejemplo:</p>
+            <div class="code-snippet">
+                <pre><code>
+// cypress/e2e/sample-files.cy.js
+describe('Gestión de Archivos de Ejemplo', () => {
+  beforeEach(() => {
+    // Login como administrador
+    cy.login('admin@example.com', 'password123');
+    
+    // Interceptar peticiones de API
+    cy.intercept('GET', '/api/subareas/*/sample-files').as('getSampleFiles');
+    cy.intercept('POST', '/api/subareas/*/sample-files').as('addSampleFile');
+    cy.intercept('DELETE', '/api/subareas/*/sample-files/*').as('deleteSampleFile');
+    
+    // Navegar a la página de subárea
+    cy.visit('/areas/area123/subareas/sub456');
+    cy.wait('@getSampleFiles');
+  });
+  
+  it('muestra la lista de archivos de ejemplo de una subárea', () => {
+    // Verificar que se muestra el contenedor de archivos de ejemplo
+    cy.get('.sample-files-container').should('be.visible');
+    
+    // Verificar que se muestran los archivos existentes
+    cy.get('.sample-file-item').should('have.length.gt', 0);
+    
+    // Verificar que cada archivo tiene nombre y botón de descarga
+    cy.get('.sample-file-item').first().within(() => {
+      cy.get('.sample-file-name').should('be.visible');
+      cy.get('.download-btn').should('be.visible');
+    });
+  });
+  
+  it('permite añadir un nuevo archivo de ejemplo', () => {
+    // Hacer clic en el botón para añadir archivo
+    cy.get('.sample-files-header button').contains('Añadir').click();
+    
+    // Verificar que se muestra el modal de subida
+    cy.get('.modal').should('be.visible');
+    cy.get('.modal-title').should('contain', 'Subir Archivo');
+    
+    // Subir un archivo de prueba
+    cy.get('input[type="file"]').attachFile('test-files/ejemplo_prueba.xlsx');
+    
+    // Añadir descripción
+    cy.get('#file-description').type('Archivo de prueba para Cypress');
+    
+    // Hacer clic en botón para subir
+    cy.get('.upload-actions button').contains('Subir').click();
+    
+    // Esperar respuesta de la API
+    cy.wait('@addSampleFile');
+    
+    // Verificar que se ha añadido el archivo a la lista
+    cy.get('.sample-file-item').should('contain', 'ejemplo_prueba.xlsx');
+    cy.get('.sample-file-description').should('contain', 'Archivo de prueba para Cypress');
+  });
+  
+  it('permite eliminar un archivo de ejemplo', () => {
+    // Contar archivos iniciales
+    cy.get('.sample-file-item').then($items => {
+      const initialCount = $items.length;
+      
+      // Hacer clic en el botón de eliminar del primer archivo
+      cy.get('.sample-file-item').first().find('.delete-btn').click();
+      
+      // Confirmar eliminación en el diálogo
+      cy.on('window:confirm', () => true);
+      
+      // Esperar respuesta de la API
+      cy.wait('@deleteSampleFile');
+      
+      // Verificar que hay un archivo menos
+      cy.get('.sample-file-item').should('have.length', initialCount - 1);
+    });
+  });
+  
+  it('permite descargar un archivo de ejemplo', () => {
+    // Mock de descarga ya que Cypress no puede probar directamente las descargas
+    cy.intercept('GET', '/api/files/*/download*', { fixture: 'test-files/ejemplo_prueba.xlsx' }).as('downloadFile');
+    
+    // Hacer clic en el botón de descarga del primer archivo
+    cy.get('.sample-file-item').first().find('.download-btn').click();
+    
+    // Verificar que se ha iniciado la descarga
+    cy.wait('@downloadFile');
+  });
+  
+  it('muestra mensaje adecuado cuando no hay archivos', () => {
+    // Interceptar petición para devolver array vacío
+    cy.intercept('GET', '/api/subareas/*/sample-files', {
+      statusCode: 200,
+      body: {
+        success: true,
+        data: []
+      }
+    }).as('getEmptyFiles');
+    
+    // Recargar la página
+    cy.reload();
+    cy.wait('@getEmptyFiles');
+    
+    // Verificar mensaje de "no hay archivos"
+    cy.get('.sample-files-empty').should('be.visible');
+    cy.get('.sample-files-empty').should('contain', 'No hay archivos de ejemplo disponibles');
+  });
+  
+  it('maneja errores de API correctamente', () => {
+    // Interceptar petición para simular error
+    cy.intercept('GET', '/api/subareas/*/sample-files', {
+      statusCode: 500,
+      body: {
+        success: false,
+        error: {
+          message: 'Error interno del servidor'
+        }
+      }
+    }).as('getErrorFiles');
+    
+    // Recargar la página
+    cy.reload();
+    cy.wait('@getErrorFiles');
+    
+    // Verificar que se muestra el mensaje de error
+    cy.get('.sample-files-error').should('be.visible');
+    cy.get('.error-message').should('contain', 'Error al cargar archivos');
+  });
+});
+                </code></pre>
+            </div>
+            
+            <h3>Herramientas y Configuración</h3>
+            <p>Configuración recomendada para las pruebas frontend:</p>
+            
+            <h4>Jest y React Testing Library</h4>
+            <div class="code-snippet">
+                <pre><code>
+// jest.config.js
+module.exports = {
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
+  moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/src/__mocks__/fileMock.js'
+  },
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
+  },
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/index.js',
+    '!src/reportWebVitals.js'
+  ],
+  coverageThreshold: {
+    global: {
+      statements: 70,
+      branches: 60,
+      functions: 70,
+      lines: 70
+    }
+  }
+};
+
+// setupTests.js
+import '@testing-library/jest-dom';
+import 'jest-axe/extend-expect';
+import { server } from './mocks/server';
+
+// Establecer servidor mock MSW
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+                </code></pre>
+            </div>
+            
+            <h4>Cypress</h4>
+            <div class="code-snippet">
+                <pre><code>
+// cypress.config.js
+const { defineConfig } = require('cypress');
+
+module.exports = defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:3000',
+    setupNodeEvents(on, config) {
+      // configuración para plugins
+    },
+    viewportWidth: 1280,
+    viewportHeight: 720,
+    video: false,
+    screenshotOnRunFailure: true,
+    defaultCommandTimeout: 10000
+  },
+  
+  component: {
+    devServer: {
+      framework: 'react',
+      bundler: 'webpack'
+    }
+  },
+  
+  env: {
+    apiUrl: 'http://localhost:5000/api'
+  }
+});
+
+// cypress/support/commands.js
+// Comando personalizado para login
+Cypress.Commands.add('login', (email, password) => {
+  cy.request({
+    method: 'POST',
+    url: `${Cypress.env('apiUrl')}/auth/login`,
+    body: { email, password }
+  }).then((response) => {
+    expect(response.status).to.eq(200);
+    localStorage.setItem('authToken', response.body.token);
+    localStorage.setItem('user', JSON.stringify(response.body.user));
+  });
+  
+  // Recargar para aplicar el token
+  cy.visit('/');
+});
+
+// Comando para adjuntar archivos
+import 'cypress-file-upload';
+                </code></pre>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Sistema de Gestión Documental - Guía de Implementación Frontend</p>
+        <p>Mayo 2024</p>
+    </footer>
+</body>
+</html> 

@@ -1,0 +1,37 @@
+<div class="file-upload-container">
+  <div class="file-upload-area">
+    <input 
+      type="file" 
+      id="fileUpload" 
+      [multiple]="multiple" 
+      [accept]="accept" 
+      (change)="onFileSelected($event)" 
+      class="file-input"
+    >
+    <label for="fileUpload" class="file-label">
+      <span class="file-icon">📁</span>
+      <span>{{ label }}</span>
+    </label>
+  </div>
+  
+  <div class="file-list" *ngIf="files.length > 0">
+    <div class="file-item" *ngFor="let file of files; let i = index">
+      <div class="file-details">
+        <span class="file-name">
+          <ng-container *ngIf="!allowCustomName">{{ file.name }}</ng-container>
+          <div *ngIf="allowCustomName" class="custom-name-container">
+            <input 
+              type="text" 
+              class="custom-name-input" 
+              [value]="customNames[i]" 
+              (input)="handleNameChange($event, i)"
+              placeholder="Nombre personalizado"
+            />
+          </div>
+        </span>
+        <span class="file-size">{{ file.size | fileSize }}</span>
+      </div>
+      <button class="remove-file" (click)="removeFile(i)">×</button>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,105 @@
+<div class="puzzle-visualization-wrapper">
+  <div class="puzzle-options">
+    <div class="view-options">
+      <span class="option-label">Vista:</span>
+      <div class="toggle-buttons">
+        <button [class.active]="visualizationMode === 'treemap'" (click)="setVisualizationMode('treemap')">Mapa de árbol</button>
+        <button [class.active]="visualizationMode === 'grid'" (click)="setVisualizationMode('grid')">Cuadrícula</button>
+      </div>
+    </div>
+    
+    <div class="detail-options">
+      <span class="option-label">Mostrar:</span>
+      <label class="checkbox-option">
+        <input type="checkbox" [(ngModel)]="showMissingFiles" (change)="updateVisualization()">
+        Archivos faltantes
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" [(ngModel)]="showLabels" (change)="updateVisualization()">
+        Etiquetas
+      </label>
+    </div>
+  </div>
+
+  <div class="puzzle-content">
+    <div #puzzleContainer class="puzzle-container"></div>
+    
+    <div class="puzzle-legend">
+      <h4>Leyenda</h4>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: #2ecc71;"></span>
+          <span class="legend-label">Procesado</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: #3498db;"></span>
+          <span class="legend-label">Procesando</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: #e74c3c;"></span>
+          <span class="legend-label">Pendiente/Faltante</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: #f39c12;"></span>
+          <span class="legend-label">Error</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="puzzle-info" *ngIf="selectedNode">
+    <div class="info-header">
+      <h4>{{ selectedNode.label }}</h4>
+      <button class="close-button" (click)="closeInfo()">×</button>
+    </div>
+    <div class="info-content">
+      <div *ngIf="selectedNode.isMissingFilesNode" class="info-section">
+        <div class="info-item">
+          <span class="info-label">Archivos faltantes:</span>
+          <span class="info-value">{{ selectedNode.value }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Archivos esperados:</span>
+          <span class="info-value">{{ selectedNode.expected || 0 }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Archivos existentes:</span>
+          <span class="info-value">{{ selectedNode.existing || 0 }}</span>
+        </div>
+      </div>
+
+      <div *ngIf="selectedNode.isArea || selectedNode.isSubarea" class="info-section">
+        <div class="info-item">
+          <span class="info-label">Archivos existentes:</span>
+          <span class="info-value">{{ selectedNode.existing || 0 }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Archivos esperados:</span>
+          <span class="info-value">{{ selectedNode.expected || 0 }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Completado:</span>
+          <span class="info-value">{{ getCompletionRate(selectedNode) }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="getCompletionRate(selectedNode)"></div>
+        </div>
+        <div *ngIf="selectedNode.path" class="info-item path-item">
+          <span class="info-label">Ruta:</span>
+          <span class="info-value path-value">{{ selectedNode.path }}</span>
+        </div>
+      </div>
+
+      <div *ngIf="!selectedNode.isMissingFilesNode && !selectedNode.isArea && !selectedNode.isSubarea" class="info-section">
+        <div class="info-item">
+          <span class="info-label">Estado:</span>
+          <span class="info-value" [ngClass]="'status-' + (selectedNode.status || 'desconocido')">{{ getStatusText(selectedNode.status || 'desconocido') }}</span>
+        </div>
+        <div *ngIf="selectedNode.path" class="info-item path-item">
+          <span class="info-label">Ruta:</span>
+          <span class="info-value path-value">{{ selectedNode.path }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

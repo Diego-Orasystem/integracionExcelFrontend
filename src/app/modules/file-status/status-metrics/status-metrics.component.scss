@@ -1,0 +1,63 @@
+.metrics-container {
+  margin-top: 20px;
+}
+
+.metrics-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.metric-card {
+  width: 32%;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.metric-label {
+  font-size: 14px;
+  color: #666;
+}
+
+// Estado colores
+.pending {
+  border-left: 4px solid #e74c3c;
+  .metric-value { color: #e74c3c; }
+}
+
+.processing {
+  border-left: 4px solid #3498db;
+  .metric-value { color: #3498db; }
+}
+
+.processed {
+  border-left: 4px solid #2ecc71;
+  .metric-value { color: #2ecc71; }
+}
+
+.error {
+  border-left: 4px solid #f39c12;
+  .metric-value { color: #f39c12; }
+}
+
+.total-size {
+  border-left: 4px solid #9b59b6;
+  .metric-value { color: #9b59b6; }
+} 

@@ -1,0 +1,23 @@
+<div class="side-menu" [class.collapsed]="isCollapsed">
+  <!-- Encabezado del menú -->
+  <div class="menu-header">
+   
+    <button class="collapse-btn" (click)="toggleCollapse()" title="Colapsar menú">
+      <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>
+    </button>
+  </div>
+  
+  <!-- Contenido del menú estático -->
+  <div class="menu-content">
+    <ul class="nav-list">
+      <li class="nav-item" *ngFor="let item of filteredMenuItems">
+        <a class="nav-link" [routerLink]="[item.url]" [class.active]="isActiveRoute(item.url)">
+          <i [class]="item.icon"></i>
+          <span>{{ item.name | translate }}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+  
+</div> 

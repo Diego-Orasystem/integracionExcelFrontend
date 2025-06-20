@@ -1,0 +1,104 @@
+# Panel de Control de Archivos - Visualizaciones Interactivas
+
+Este proyecto es un panel de control para la gestión y visualización del estado de archivos en diferentes áreas y subáreas de una organización.
+
+## Características
+
+- **Vista de Lista**: Visualización tabular detallada de áreas y subáreas con información completa.
+- **Visualizaciones Interactivas**:
+  - **Vista Simple**: Visualización básica de tipo tarjeta para áreas y subáreas.
+  - **Treemap**: Visualización jerárquica donde el tamaño representa la cantidad de archivos y el color la completitud.
+  - **Hexágonos**: Representación de áreas como hexágonos interconectados, tipo panal de abejas.
+  - **Árbol Radial**: Organización en círculo con las subáreas irradiando desde las áreas principales.
+- **Búsqueda y Filtrado**: Posibilidad de buscar por nombre de área, subárea o responsable.
+- **Resumen Estadístico**: Tarjetas con métricas principales (totales, existentes, pendientes y tasa de completitud).
+
+## Tecnologías Utilizadas
+
+- Angular 16
+- TypeScript
+- D3.js para visualizaciones avanzadas
+- Font Awesome para iconos
+- CSS moderno con flexbox y grid
+
+## Instalación y Ejecución
+
+### Requisitos Previos
+
+- Node.js (versión 14 o superior)
+- npm (incluido con Node.js)
+
+### Pasos de Instalación
+
+1. Clonar el repositorio:
+   ```bash
+   git clone <url-del-repositorio>
+   cd frontend
+   ```
+
+2. Instalar dependencias:
+   ```bash
+   npm install
+   ```
+
+3. Ejecutar el servidor de desarrollo:
+   ```bash
+   npm start
+   ```
+
+4. Abrir en el navegador:
+   ```
+   http://localhost:4200
+   ```
+
+## Uso de las Visualizaciones
+
+### Vista de Lista
+- Muestra todas las áreas y subáreas en formato tabla.
+- Permite expandir/colapsar áreas para ver sus subáreas.
+- Incluye métricas detalladas y barras de progreso.
+
+### Vista Simple
+- Visualización tipo tarjeta con áreas y subáreas.
+- Las tarjetas están coloreadas según el nivel de completitud.
+- Al hacer clic en un área o subárea se muestran sus detalles.
+
+### Treemap
+- El tamaño de cada bloque representa la cantidad de archivos.
+- El color indica el nivel de completitud (rojo: bajo, amarillo: medio, verde: alto).
+- Permite navegar jerárquicamente entre áreas y subáreas.
+
+### Hexágonos
+- Las áreas se representan como hexágonos grandes.
+- Las subáreas como hexágonos más pequeños conectados al principal.
+- Permite zoom y pan para explorar la visualización.
+
+### Árbol Radial
+- Las áreas se organizan en un círculo central.
+- Las subáreas irradian desde las áreas principales.
+- Proporciona una vista clara de las relaciones jerárquicas.
+
+## Configuración para Desarrollo
+
+### Estructura del Proyecto
+
+- `src/app/modules/dashboard`: Componente principal del panel de control.
+- `src/app/modules/dashboard/components`: Componentes específicos para las visualizaciones.
+  - `area-puzzle`: Visualización simple original.
+  - `treemap-visualization`: Visualización de tipo Treemap.
+  - `hexagon-visualization`: Visualización de hexágonos tipo panal.
+  - `radial-tree-visualization`: Visualización de árbol radial.
+  - `visualization-tabs`: Componente de pestañas para alternar entre visualizaciones.
+
+### Personalización
+
+Para añadir nuevas visualizaciones:
+
+1. Crear un nuevo componente en la carpeta `components`.
+2. Implementar la lógica de visualización (preferiblemente con D3.js).
+3. Integrar el componente en `visualization-tabs.component.ts`.
+4. Añadir la nueva pestaña en el array `tabs`.
+
+## Contacto y Soporte
+
+Para reportar problemas o solicitar nuevas características, por favor abrir un issue en el repositorio del proyecto. 

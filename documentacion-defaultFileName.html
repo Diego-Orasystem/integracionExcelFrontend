@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentación - Nombre de Archivo por Defecto</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #2980b9;
+      border-left: 4px solid #3498db;
+      padding-left: 10px;
+      margin-top: 30px;
+    }
+    h3 {
+      color: #3498db;
+      margin-top: 25px;
+    }
+    code {
+      background-color: #f8f8f8;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: Consolas, Monaco, 'Andale Mono', monospace;
+      font-size: 0.9em;
+      color: #e74c3c;
+    }
+    pre {
+      background-color: #f8f8f8;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      line-height: 1.4;
+      border-left: 4px solid #3498db;
+    }
+    pre code {
+      background-color: transparent;
+      padding: 0;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    .note {
+      background-color: #fef9e7;
+      border-left: 4px solid #f1c40f;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .important {
+      background-color: #f8d7da;
+      border-left: 4px solid #e74c3c;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .tip {
+      background-color: #d4edda;
+      border-left: 4px solid #2ecc71;
+      padding: 15px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Documentación: Implementación de Nombre de Archivo por Defecto</h1>
+  
+  <p>
+    Esta documentación describe cómo implementar la funcionalidad de nombre de archivo por defecto en áreas y subáreas en el frontend de la aplicación.
+  </p>
+
+  <h2>1. Descripción General</h2>
+  
+  <p>
+    La funcionalidad de nombre de archivo por defecto permite especificar un nombre predeterminado para los archivos que se subirán a las áreas o subáreas. Este nombre es opcional y puede marcarse como requerido.
+  </p>
+  
+  <p>
+    Cuando se crea una subárea, esta puede heredar el nombre de archivo por defecto del área padre si no se especifica uno propio.
+  </p>
+
+  <div class="tip">
+    <strong>Beneficio:</strong> Esta característica ayuda a mantener una convención de nombres para los archivos subidos a las diferentes áreas y subáreas de la organización.
+  </div>
+
+  <h2>2. Cambios en los Modelos</h2>
+  
+  <p>
+    Los modelos de <code>Area</code> y <code>SubArea</code> ahora incluyen los siguientes campos:
+  </p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Campo</th>
+        <th>Tipo</th>
+        <th>Descripción</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>defaultFileName</code></td>
+        <td>String</td>
+        <td>El nombre por defecto para los archivos que se subirán a esta área/subárea</td>
+      </tr>
+      <tr>
+        <td><code>isDefaultFileRequired</code></td>
+        <td>Boolean</td>
+        <td>Indica si es obligatorio utilizar el nombre por defecto (default: false)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Implementación en Formularios</h2>
+
+  <h3>3.1. Formulario de Creación/Edición de Áreas</h3>
+  
+  <p>
+    Agregar los siguientes campos al formulario de creación/edición de áreas:
+  </p>
+  
+  <pre><code>// Ejemplo en React con formik
+&lt;div className="form-group"&gt;
+  &lt;label htmlFor="defaultFileName"&gt;Nombre de archivo por defecto&lt;/label&gt;
+  &lt;Field
+    type="text"
+    className="form-control"
+    id="defaultFileName"
+    name="defaultFileName"
+    placeholder="Ej: Informe_Mensual_[FECHA]"
+  /&gt;
+  &lt;small className="form-text text-muted"&gt;
+    Opcional. Define un nombre predeterminado para archivos subidos a esta área.
+  &lt;/small&gt;
+  &lt;ErrorMessage name="defaultFileName" component="div" className="text-danger" /&gt;
+&lt;/div&gt;
+
+&lt;div className="form-check mb-3"&gt;
+  &lt;Field
+    type="checkbox"
+    className="form-check-input"
+    id="isDefaultFileRequired"
+    name="isDefaultFileRequired"
+  /&gt;
+  &lt;label className="form-check-label" htmlFor="isDefaultFileRequired"&gt;
+    Requerir el uso del nombre por defecto
+  &lt;/label&gt;
+&lt;/div&gt;</code></pre>
+
+  <h3>3.2. Formulario de Creación/Edición de Subáreas</h3>
+  
+  <p>
+    Implementar los mismos campos en el formulario de subáreas, con la posibilidad de heredar del área padre:
+  </p>
+  
+  <pre><code>// Ejemplo en React con formik
+{/* Mostrar el nombre heredado si existe */}
+{parentArea.defaultFileName && (
+  &lt;div className="alert alert-info"&gt;
+    Esta subárea heredará el nombre de archivo por defecto "{parentArea.defaultFileName}" 
+    del área padre si no se especifica uno propio.
+  &lt;/div&gt;
+)}
+
+&lt;div className="form-group"&gt;
+  &lt;label htmlFor="defaultFileName"&gt;Nombre de archivo por defecto&lt;/label&gt;
+  &lt;Field
+    type="text"
+    className="form-control"
+    id="defaultFileName"
+    name="defaultFileName"
+    placeholder={parentArea.defaultFileName || "Ej: Informe_Subarea_[FECHA]"}
+  /&gt;
+  &lt;small className="form-text text-muted"&gt;
+    Opcional. Define un nombre predeterminado para archivos subidos a esta subárea.
+    Deja en blanco para heredar del área padre.
+  &lt;/small&gt;
+  &lt;ErrorMessage name="defaultFileName" component="div" className="text-danger" /&gt;
+&lt;/div&gt;
+
+&lt;div className="form-check mb-3"&gt;
+  &lt;Field
+    type="checkbox"
+    className="form-check-input"
+    id="isDefaultFileRequired"
+    name="isDefaultFileRequired"
+  /&gt;
+  &lt;label className="form-check-label" htmlFor="isDefaultFileRequired"&gt;
+    Requerir el uso del nombre por defecto
+  &lt;/label&gt;
+&lt;/div&gt;</code></pre>
+
+  <h2>4. Integración con el API</h2>
+
+  <h3>4.1. Creación de Áreas</h3>
+  
+  <p>
+    Al crear un área, incluir los nuevos campos en la solicitud API:
+  </p>
+  
+  <pre><code>// Ejemplo en JavaScript
+async function createArea(areaData) {
+  try {
+    const response = await axios.post('/api/areas', {
+      name: areaData.name,
+      description: areaData.description,
+      responsibleUserId: areaData.responsibleUserId,
+      // ... otros campos existentes
+      
+      // Nuevos campos
+      defaultFileName: areaData.defaultFileName || undefined,
+      isDefaultFileRequired: areaData.isDefaultFileRequired || false
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear área:', error);
+    throw error;
+  }
+}</code></pre>
+
+  <h3>4.2. Actualización de Áreas</h3>
+  
+  <pre><code>// Ejemplo en JavaScript
+async function updateArea(areaId, areaData) {
+  try {
+    const response = await axios.put(`/api/areas/${areaId}`, {
+      // ... campos existentes
+      
+      // Nuevos campos
+      defaultFileName: areaData.defaultFileName,
+      isDefaultFileRequired: areaData.isDefaultFileRequired
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar área:', error);
+    throw error;
+  }
+}</code></pre>
+
+  <div class="note">
+    <strong>Nota:</strong> Para eliminar el nombre por defecto, enviar <code>defaultFileName: null</code> o <code>defaultFileName: ""</code>.
+  </div>
+
+  <h3>4.3. Creación de Subáreas</h3>
+  
+  <p>
+    De manera similar, incluir los campos en la creación de subáreas:
+  </p>
+  
+  <pre><code>// Ejemplo en JavaScript
+async function createSubArea(areaId, subareaData) {
+  try {
+    const response = await axios.post(`/api/areas/${areaId}/subareas`, {
+      name: subareaData.name,
+      description: subareaData.description,
+      // ... otros campos existentes
+      
+      // Nuevos campos - si se dejan indefinidos, heredará del área padre
+      defaultFileName: subareaData.defaultFileName || undefined,
+      isDefaultFileRequired: subareaData.isDefaultFileRequired
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear subárea:', error);
+    throw error;
+  }
+}</code></pre>
+
+  <h2>5. Visualización en la Interfaz</h2>
+
+  <h3>5.1. Vista de Detalle del Área</h3>
+  
+  <p>
+    Mostrar la información del nombre de archivo por defecto en la vista de detalle del área:
+  </p>
+  
+  <pre><code>// Ejemplo en React JSX
+&lt;div className="area-details"&gt;
+  {/* ... otros detalles del área */}
+  
+  {area.defaultFileName && (
+    &lt;div className="default-file-info"&gt;
+      &lt;h4&gt;Nombre de Archivo por Defecto&lt;/h4&gt;
+      &lt;p&gt;{area.defaultFileName}&lt;/p&gt;
+      {area.isDefaultFileRequired && (
+        &lt;span className="badge badge-warning"&gt;Requerido&lt;/span&gt;
+      )}
+    &lt;/div&gt;
+  )}
+&lt;/div&gt;</code></pre>
+
+  <h3>5.2. Vista de Detalle de la Subárea</h3>
+  
+  <p>
+    Mostrar la información del nombre de archivo por defecto en la vista de detalle de la subárea:
+  </p>
+  
+  <pre><code>// Ejemplo en React JSX
+&lt;div className="subarea-details"&gt;
+  {/* ... otros detalles de la subárea */}
+  
+  {subarea.defaultFileName && (
+    &lt;div className="default-file-info"&gt;
+      &lt;h4&gt;Nombre de Archivo por Defecto&lt;/h4&gt;
+      &lt;p&gt;{subarea.defaultFileName}&lt;/p&gt;
+      {subarea.isDefaultFileRequired && (
+        &lt;span className="badge badge-warning"&gt;Requerido&lt;/span&gt;
+      )}
+    &lt;/div&gt;
+  )}
+&lt;/div&gt;</code></pre>
+
+  <h2>6. Implementación en el Uploader de Archivos</h2>
+
+  <p>
+    Modificar el componente de carga de archivos para utilizar el nombre por defecto:
+  </p>
+  
+  <pre><code>// Ejemplo en React JSX
+function FileUploader({ areaId, subareaId }) {
+  const [files, setFiles] = useState([]);
+  const [currentArea, setCurrentArea] = useState(null);
+  const [currentSubarea, setCurrentSubarea] = useState(null);
+  
+  // Cargar los datos del área/subárea
+  useEffect(() => {
+    async function loadData() {
+      try {
+        if (subareaId) {
+          const subareaData = await fetchSubarea(subareaId);
+          setCurrentSubarea(subareaData);
+        } else if (areaId) {
+          const areaData = await fetchArea(areaId);
+          setCurrentArea(areaData);
+        }
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+      }
+    }
+    
+    loadData();
+  }, [areaId, subareaId]);
+  
+  // Determinar el nombre por defecto
+  const defaultFileName = currentSubarea?.defaultFileName || currentArea?.defaultFileName || '';
+  const isDefaultRequired = currentSubarea?.isDefaultFileRequired || currentArea?.isDefaultFileRequired || false;
+  
+  // Manejar cambio de archivos seleccionados
+  const handleFileChange = (event) => {
+    const selectedFiles = Array.from(event.target.files);
+    
+    // Si hay un nombre por defecto requerido, verificar que se pueda aplicar
+    if (defaultFileName && isDefaultRequired) {
+      // Crear nuevos nombres basados en el patrón por defecto
+      const renamedFiles = selectedFiles.map((file, index) => {
+        // Extraer la extensión del archivo original
+        const extension = file.name.split('.').pop();
+        
+        // Reemplazar variables en el nombre por defecto
+        let newName = defaultFileName
+          .replace('[FECHA]', new Date().toISOString().split('T')[0])
+          .replace('[HORA]', new Date().toISOString().split('T')[1].substring(0, 8).replace(/:/g, ''))
+          .replace('[INDEX]', (index + 1).toString().padStart(2, '0'));
+        
+        // Asegurar que tenga la extensión correcta
+        if (!newName.endsWith(`.${extension}`)) {
+          newName += `.${extension}`;
+        }
+        
+        // Crear un nuevo objeto File con el nombre modificado
+        return new File([file], newName, { type: file.type });
+      });
+      
+      setFiles(renamedFiles);
+    } else {
+      setFiles(selectedFiles);
+    }
+  };
+  
+  return (
+    &lt;div className="file-uploader"&gt;
+      {/* Mostrar info del nombre por defecto */}
+      {defaultFileName && (
+        &lt;div className={`default-file-name-info ${isDefaultRequired ? 'required' : 'optional'}`}&gt;
+          &lt;p&gt;
+            &lt;i className="fas fa-info-circle"&gt;&lt;/i&gt;
+            {isDefaultRequired 
+              ? `Los archivos serán renombrados automáticamente usando el patrón: "${defaultFileName}"` 
+              : `Nombre de archivo sugerido: "${defaultFileName}"`}
+          &lt;/p&gt;
+        &lt;/div&gt;
+      )}
+      
+      {/* Input de archivos */}
+      &lt;input 
+        type="file" 
+        multiple 
+        onChange={handleFileChange} 
+        className="form-control-file"
+      /&gt;
+      
+      {/* Previsualización de archivos */}
+      {files.length > 0 && (
+        &lt;div className="file-list mt-3"&gt;
+          &lt;h5&gt;Archivos a subir:&lt;/h5&gt;
+          &lt;ul className="list-group"&gt;
+            {files.map((file, index) => (
+              &lt;li key={index} className="list-group-item"&gt;
+                {file.name} ({(file.size / 1024).toFixed(2)} KB)
+              &lt;/li&gt;
+            ))}
+          &lt;/ul&gt;
+        &lt;/div&gt;
+      )}
+      
+      {/* Botón de subida */}
+      &lt;button 
+        className="btn btn-primary mt-3" 
+        disabled={files.length === 0}
+        onClick={() => handleUpload(files)}
+      &gt;
+        Subir archivos
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+  <h2>7. Sugerencias de Implementación</h2>
+
+  <div class="tip">
+    <h3>Variables para los Nombres por Defecto</h3>
+    <p>
+      Puedes implementar un sistema de variables en los nombres por defecto que se reemplazan durante la carga de archivos:
+    </p>
+    <ul>
+      <li><code>[FECHA]</code> - Fecha actual en formato YYYY-MM-DD</li>
+      <li><code>[HORA]</code> - Hora actual en formato HH:MM:SS</li>
+      <li><code>[AREA]</code> - Nombre del área</li>
+      <li><code>[SUBAREA]</code> - Nombre de la subárea</li>
+      <li><code>[INDEX]</code> - Índice del archivo (útil para cargas múltiples)</li>
+    </ul>
+  </div>
+
+  <div class="note">
+    <h3>Compatibilidad con Carga Masiva</h3>
+    <p>
+      Cuando se implementa la carga masiva de archivos, asegúrese de aplicar el patrón de nombre por defecto a cada archivo, posiblemente añadiendo un índice o contador para diferenciarlos.
+    </p>
+  </div>
+
+  <div class="important">
+    <h3>Consideraciones de Seguridad</h3>
+    <p>
+      Recuerde que los nombres de archivo pueden contener caracteres especiales que podrían causar problemas en diferentes sistemas de archivos. Asegúrese de:
+    </p>
+    <ul>
+      <li>Validar y sanear los nombres por defecto para eliminar caracteres problemáticos.</li>
+      <li>Implementar límites razonables para la longitud del nombre por defecto.</li>
+      <li>Considerar las restricciones del sistema de archivos subyacente.</li>
+    </ul>
+  </div>
+
+  <h2>8. Conclusión</h2>
+  
+  <p>
+    La implementación del nombre de archivo por defecto proporciona una forma de estandarizar los nombres de archivos en las diferentes áreas y subáreas de la organización, mejorando la organización y consistencia de los documentos almacenados.
+  </p>
+  
+  <p>
+    Esta funcionalidad es especialmente útil en entornos donde múltiples usuarios suben archivos y se necesita mantener una convención de nombres consistente.
+  </p>
+
+</body>
+</html> 

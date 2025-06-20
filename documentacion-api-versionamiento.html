@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación API - Versionamiento de Archivos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        
+        h3 {
+            color: #3498db;
+            margin-top: 30px;
+        }
+        
+        .method-card {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .method-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .method-badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            margin-right: 15px;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .get { background-color: #3498db; }
+        .post { background-color: #2ecc71; }
+        .put { background-color: #f39c12; }
+        .delete { background-color: #e74c3c; }
+        
+        pre {
+            background-color: #f8f8f8;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        
+        code {
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .status-code {
+            font-weight: bold;
+        }
+        
+        .code-200 { color: #2ecc71; }
+        .code-400 { color: #f39c12; }
+        .code-401 { color: #e67e22; }
+        .code-404 { color: #e74c3c; }
+        .code-500 { color: #c0392b; }
+        
+        .note {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .warning {
+            background-color: #fff9e6;
+            border-left: 4px solid #f1c40f;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .model-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .implementation-section {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Documentación API - Versionamiento de Archivos</h1>
+        <p>Sistema de versionamiento para mantener control de cambios en archivos</p>
+    </header>
+    
+    <section id="introduccion">
+        <h2>Introducción</h2>
+        <p>El sistema de versionamiento de archivos permite mantener un historial de todas las versiones de los archivos subidos a la plataforma. Esto facilita la trazabilidad de cambios y proporciona la capacidad de revertir a versiones anteriores cuando sea necesario.</p>
+        
+        <div class="note">
+            <strong>Nota:</strong> El sistema de versionamiento está diseñado principalmente para archivos de Excel, aunque puede funcionar con cualquier tipo de archivo.
+        </div>
+    </section>
+    
+    <section id="modelos">
+        <h2>Modelos de Datos</h2>
+        
+        <div class="model-section">
+            <h3>Modelo File</h3>
+            <p>El modelo principal que contiene la información básica del archivo y referencia a su versión actual.</p>
+            <pre><code>
+const FileSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'El nombre del archivo es obligatorio'],
+    trim: true
+  },
+  originalName: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  folderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Folder',
+    required: [true, 'El archivo debe estar en una carpeta']
+  },
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: [true, 'El archivo debe pertenecer a una empresa']
+  },
+  size: {
+    type: Number,
+    required: true
+  },
+  mimeType: {
+    type: String,
+    required: true
+  },
+  extension: {
+    type: String,
+    required: true
+  },
+  storageLocation: {
+    type: String,
+    required: true
+  },
+  uploadedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Se debe especificar quién subió el archivo']
+  },
+  uploadType: {
+    type: String,
+    enum: ['manual', 'sftp', 'api'],
+    default: 'manual'
+  },
+  version: {
+    type: Number,
+    default: 1
+  },
+  status: {
+    type: String,
+    enum: ['pendiente', 'procesando', 'procesado', 'error'],
+    default: 'pendiente'
+  },
+  processingDetails: {
+    startDate: Date,
+    endDate: Date,
+    duration: Number, // en milisegundos
+    errorMessage: String,
+    processingNotes: String
+  },
+  metadata: {
+    sheets: [String],
+    rowCount: Number,
+    columnCount: Number
+  },
+  tags: [String]
+}, {
+  timestamps: true
+});
+            </code></pre>
+        </div>
+        
+        <div class="model-section">
+            <h3>Modelo FileVersion</h3>
+            <p>Almacena información específica de cada versión de un archivo.</p>
+            <pre><code>
+const FileVersionSchema = new mongoose.Schema({
+  fileId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'File',
+    required: [true, 'La versión debe estar asociada a un archivo']
+  },
+  version: {
+    type: Number,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  size: {
+    type: Number,
+    required: true
+  },
+  storageLocation: {
+    type: String,
+    required: true
+  },
+  uploadedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Se debe especificar quién subió esta versión']
+  }
+}, {
+  timestamps: true
+});
+            </code></pre>
+        </div>
+    </section>
+    
+    <section id="apis">
+        <h2>APIs de Versionamiento</h2>
+        
+        <div class="method-card">
+            <div class="method-title">
+                <span class="method-badge post">POST</span>
+                <h3>/api/files/versions</h3>
+            </div>
+            <p>Sube una nueva versión de un archivo existente.</p>
+            
+            <h4>Parámetros de la solicitud (multipart/form-data)</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Tipo</th>
+                        <th>Requerido</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>file</td>
+                        <td>File</td>
+                        <td>Sí</td>
+                        <td>Archivo a subir como nueva versión</td>
+                    </tr>
+                    <tr>
+                        <td>fileId</td>
+                        <td>String</td>
+                        <td>Sí</td>
+                        <td>ID del archivo al que se le añadirá una nueva versión</td>
+                    </tr>
+                    <tr>
+                        <td>description</td>
+                        <td>String</td>
+                        <td>No</td>
+                        <td>Descripción de los cambios en esta versión</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Respuesta exitosa (200)</h4>
+            <pre><code>
+{
+  "success": true,
+  "data": {
+    "_id": "60d21b4667d0d8001f8e6c2a",
+    "fileId": "60d21b4667d0d8001f8e6c29",
+    "version": 2,
+    "name": "informe_mensual.xlsx",
+    "size": 25600,
+    "createdAt": "2023-06-22T14:35:42.000Z"
+  }
+}
+            </code></pre>
+            
+            <h4>Posibles códigos de error</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="status-code code-400">400 Bad Request</td>
+                        <td>Parámetros de solicitud incorrectos o incompletos</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-401">401 Unauthorized</td>
+                        <td>No autenticado o token inválido</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-404">404 Not Found</td>
+                        <td>Archivo original no encontrado</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-500">500 Server Error</td>
+                        <td>Error interno del servidor</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="method-card">
+            <div class="method-title">
+                <span class="method-badge get">GET</span>
+                <h3>/api/files/:id/versions</h3>
+            </div>
+            <p>Obtiene el historial de versiones de un archivo específico.</p>
+            
+            <h4>Parámetros de ruta</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>id</td>
+                        <td>String</td>
+                        <td>ID del archivo del que se desean obtener las versiones</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Respuesta exitosa (200)</h4>
+            <pre><code>
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "60d21b4667d0d8001f8e6c28",
+      "fileId": "60d21b4667d0d8001f8e6c29",
+      "version": 1,
+      "name": "informe_mensual.xlsx",
+      "size": 24500,
+      "uploadedBy": {
+        "_id": "60d21b4667d0d8001f8e6c20",
+        "name": "Juan Pérez"
+      },
+      "createdAt": "2023-06-21T10:15:30.000Z"
+    },
+    {
+      "_id": "60d21b4667d0d8001f8e6c2a",
+      "fileId": "60d21b4667d0d8001f8e6c29",
+      "version": 2,
+      "name": "informe_mensual.xlsx",
+      "size": 25600,
+      "uploadedBy": {
+        "_id": "60d21b4667d0d8001f8e6c21",
+        "name": "Ana Gómez"
+      },
+      "createdAt": "2023-06-22T14:35:42.000Z"
+    }
+  ]
+}
+            </code></pre>
+            
+            <h4>Posibles códigos de error</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="status-code code-401">401 Unauthorized</td>
+                        <td>No autenticado o token inválido</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-404">404 Not Found</td>
+                        <td>Archivo no encontrado</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-500">500 Server Error</td>
+                        <td>Error interno del servidor</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="method-card">
+            <div class="method-title">
+                <span class="method-badge get">GET</span>
+                <h3>/api/files/versions/:versionId/download</h3>
+            </div>
+            <p>Descarga una versión específica de un archivo.</p>
+            
+            <h4>Parámetros de ruta</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>versionId</td>
+                        <td>String</td>
+                        <td>ID de la versión del archivo a descargar</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Respuesta exitosa</h4>
+            <p>Stream del archivo para descarga (application/octet-stream)</p>
+            
+            <h4>Posibles códigos de error</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="status-code code-401">401 Unauthorized</td>
+                        <td>No autenticado o token inválido</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-404">404 Not Found</td>
+                        <td>Versión del archivo no encontrada</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-500">500 Server Error</td>
+                        <td>Error interno del servidor</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="method-card">
+            <div class="method-title">
+                <span class="method-badge post">POST</span>
+                <h3>/api/files/:id/revert/:versionId</h3>
+            </div>
+            <p>Revierte un archivo a una versión anterior específica.</p>
+            
+            <h4>Parámetros de ruta</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>id</td>
+                        <td>String</td>
+                        <td>ID del archivo a revertir</td>
+                    </tr>
+                    <tr>
+                        <td>versionId</td>
+                        <td>String</td>
+                        <td>ID de la versión a la que se desea revertir</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Respuesta exitosa (200)</h4>
+            <pre><code>
+{
+  "success": true,
+  "data": {
+    "_id": "60d21b4667d0d8001f8e6c29",
+    "name": "informe_mensual.xlsx",
+    "version": 3,
+    "message": "Archivo revertido a la versión 1"
+  }
+}
+            </code></pre>
+            
+            <h4>Posibles códigos de error</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="status-code code-401">401 Unauthorized</td>
+                        <td>No autenticado o token inválido</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-403">403 Forbidden</td>
+                        <td>Sin permisos para revertir este archivo</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-404">404 Not Found</td>
+                        <td>Archivo o versión no encontrada</td>
+                    </tr>
+                    <tr>
+                        <td class="status-code code-500">500 Server Error</td>
+                        <td>Error interno del servidor</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    
+    <section id="implementacion-frontend" class="implementation-section">
+        <h2>Implementación en el Frontend</h2>
+        
+        <h3>Servicio de Angular para Versionamiento</h3>
+        <pre><code>
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FileVersionService {
+  private apiUrl = `${environment.apiUrl}/api/files`;
+
+  constructor(private http: HttpClient) { }
+
+  // Obtener todas las versiones de un archivo
+  getFileVersions(fileId: string): Observable&lt;any&gt; {
+    return this.http.get&lt;any&gt;(`${this.apiUrl}/${fileId}/versions`);
+  }
+
+  // Subir una nueva versión de un archivo
+  uploadNewVersion(fileId: string, formData: FormData): Observable&lt;any&gt; {
+    formData.append('fileId', fileId);
+    return this.http.post&lt;any&gt;(`${this.apiUrl}/versions`, formData);
+  }
+
+  // Descargar una versión específica de un archivo
+  downloadVersion(versionId: string): Observable&lt;Blob&gt; {
+    return this.http.get(`${this.apiUrl}/versions/${versionId}/download`, {
+      responseType: 'blob'
+    });
+  }
+
+  // Revertir a una versión anterior
+  revertToVersion(fileId: string, versionId: string): Observable&lt;any&gt; {
+    return this.http.post&lt;any&gt;(`${this.apiUrl}/${fileId}/revert/${versionId}`, {});
+  }
+}
+        </code></pre>
+        
+        <h3>Componente para Mostrar Historial de Versiones</h3>
+        <pre><code>
+import { Component, OnInit, Input } from '@angular/core';
+import { FileVersionService } from '../../services/file-version.service';
+
+@Component({
+  selector: 'app-file-versions',
+  templateUrl: './file-versions.component.html',
+  styleUrls: ['./file-versions.component.scss']
+})
+export class FileVersionsComponent implements OnInit {
+  @Input() fileId: string;
+  versions: any[] = [];
+  loading = false;
+  error: string = null;
+
+  constructor(private fileVersionService: FileVersionService) { }
+
+  ngOnInit(): void {
+    this.loadVersions();
+  }
+
+  loadVersions(): void {
+    this.loading = true;
+    this.fileVersionService.getFileVersions(this.fileId)
+      .subscribe(
+        response => {
+          this.versions = response.data;
+          this.loading = false;
+        },
+        error => {
+          this.error = 'Error al cargar versiones: ' + error.message;
+          this.loading = false;
+        }
+      );
+  }
+
+  downloadVersion(versionId: string, fileName: string): void {
+    this.fileVersionService.downloadVersion(versionId)
+      .subscribe(
+        blob => {
+          // Crear un objeto URL para el blob
+          const url = window.URL.createObjectURL(blob);
+          // Crear un elemento ancla oculto
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          // Anexar al cuerpo, hacer clic y eliminar
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          // Liberar el objeto URL
+          window.URL.revokeObjectURL(url);
+        },
+        error => {
+          console.error('Error al descargar versión:', error);
+          alert('Error al descargar el archivo');
+        }
+      );
+  }
+
+  revertToVersion(versionId: string): void {
+    if (confirm('¿Está seguro de que desea revertir a esta versión? Esta acción creará una nueva versión basada en la seleccionada.')) {
+      this.fileVersionService.revertToVersion(this.fileId, versionId)
+        .subscribe(
+          response => {
+            alert('Archivo revertido exitosamente a la versión seleccionada');
+            this.loadVersions(); // Recargar las versiones
+          },
+          error => {
+            console.error('Error al revertir versión:', error);
+            alert('Error al revertir a la versión seleccionada');
+          }
+        );
+    }
+  }
+}
+        </code></pre>
+        
+        <h3>Plantilla HTML para el Componente</h3>
+        <pre><code>
+&lt;div class="versions-container"&gt;
+  &lt;h3&gt;Historial de Versiones&lt;/h3&gt;
+
+  &lt;div *ngIf="loading" class="loading-spinner"&gt;
+    Cargando versiones...
+  &lt;/div&gt;
+
+  &lt;div *ngIf="error" class="error-message"&gt;
+    {{ error }}
+  &lt;/div&gt;
+
+  &lt;table *ngIf="!loading && versions.length > 0" class="versions-table"&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th&gt;Versión&lt;/th&gt;
+        &lt;th&gt;Fecha&lt;/th&gt;
+        &lt;th&gt;Subido por&lt;/th&gt;
+        &lt;th&gt;Tamaño&lt;/th&gt;
+        &lt;th&gt;Acciones&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr *ngFor="let version of versions" [class.current-version]="version.isCurrent"&gt;
+        &lt;td&gt;{{ version.version }}&lt;/td&gt;
+        &lt;td&gt;{{ version.createdAt | date:'dd/MM/yyyy HH:mm' }}&lt;/td&gt;
+        &lt;td&gt;{{ version.uploadedBy?.name || 'Usuario desconocido' }}&lt;/td&gt;
+        &lt;td&gt;{{ version.size | fileSize }}&lt;/td&gt;
+        &lt;td class="actions-cell"&gt;
+          &lt;button (click)="downloadVersion(version._id, version.name)" class="btn-download"&gt;
+            &lt;i class="fas fa-download"&gt;&lt;/i&gt; Descargar
+          &lt;/button&gt;
+          &lt;button *ngIf="!version.isCurrent" (click)="revertToVersion(version._id)" class="btn-revert"&gt;
+            &lt;i class="fas fa-history"&gt;&lt;/i&gt; Revertir
+          &lt;/button&gt;
+        &lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+
+  &lt;div *ngIf="!loading && versions.length === 0" class="empty-state"&gt;
+    No hay versiones disponibles para este archivo.
+  &lt;/div&gt;
+
+  &lt;div class="upload-new-version"&gt;
+    &lt;h4&gt;Subir nueva versión&lt;/h4&gt;
+    &lt;app-file-upload [fileId]="fileId" (uploadComplete)="loadVersions()"&gt;&lt;/app-file-upload&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+        </code></pre>
+    </section>
+    
+    <section id="recomendaciones">
+        <h2>Recomendaciones de Implementación</h2>
+        
+        <div class="warning">
+            <strong>Importante:</strong> El sistema de versionamiento consume espacio de almacenamiento adicional ya que cada versión se guarda como un archivo independiente. Considere implementar políticas de retención para versiones antiguas.
+        </div>
+        
+        <h3>Mejores Prácticas</h3>
+        <ul>
+            <li>Implemente un visor preliminar para archivos Excel que permita ver los cambios entre versiones.</li>
+            <li>Configure permisos granulares para definir qué usuarios pueden revertir versiones.</li>
+            <li>Automatice la generación de versiones cuando se modifiquen archivos mediante integraciones SFTP o API.</li>
+            <li>Considere añadir comentarios obligatorios al subir nuevas versiones para documentar los cambios realizados.</li>
+            <li>Implemente alertas de notificación cuando un archivo importante sea actualizado a una nueva versión.</li>
+        </ul>
+    </section>
+    
+    <footer>
+        <p>&copy; 2023 Sistema de Gestión Documental - Documentación API de Versionamiento</p>
+    </footer>
+</body>
+</html> 

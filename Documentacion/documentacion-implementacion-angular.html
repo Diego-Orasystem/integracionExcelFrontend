@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Implementación Frontend Angular - Sistema de Archivos</title>
+  <link rel="stylesheet" href="documentacion-implementacion-angular.css">
+</head>
+<body>
+  <div class="doc-container">
+    <header class="doc-header">
+      <h1>Implementación Frontend en Angular</h1>
+      <p class="doc-subtitle">Sistema de Archivos con Permisos</p>
+    </header>
+
+    <div class="doc-section">
+      <h2>1. Estructura del Proyecto</h2>
+      <div class="code-block">
+        <pre>
+src/
+├── app/
+│   ├── components/
+│   │   ├── file-explorer/
+│   │   │   ├── file-explorer.component.ts
+│   │   │   ├── file-explorer.component.html
+│   │   │   └── file-explorer.component.scss
+│   │   ├── file-upload/
+│   │   ├── file-details/
+│   │   └── ...
+│   ├── models/
+│   │   ├── file.model.ts
+│   │   ├── area.model.ts
+│   │   ├── subarea.model.ts
+│   │   └── ...
+│   ├── services/
+│   │   ├── file.service.ts
+│   │   ├── area.service.ts
+│   │   ├── auth.service.ts
+│   │   └── permission.service.ts
+│   ├── guards/
+│   │   ├── auth.guard.ts
+│   │   └── permission.guard.ts
+│   └── ...
+        </pre>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>2. Modelos de Datos</h2>
+
+      <div class="model-card">
+        <h3>file.model.ts</h3>
+        <div class="code-block">
+          <pre>
+export interface File {
+  _id: string;
+  name: string;
+  originalName: string;
+  path: string;
+  size: number;
+  mimeType: string;
+  extension: string;
+  companyId: string;
+  areaId?: string;
+  subareaId?: string;
+  folderId?: string;
+  uploadedBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  active: boolean;
+}
+          </pre>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <h3>area.model.ts</h3>
+        <div class="code-block">
+          <pre>
+export interface Area {
+  _id: string;
+  name: string;
+  description?: string;
+  companyId: string;
+  createdBy: string;
+  active: boolean;
+}
+          </pre>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <h3>subarea.model.ts</h3>
+        <div class="code-block">
+          <pre>
+export interface Subarea {
+  _id: string;
+  name: string;
+  description?: string;
+  areaId: string;
+  companyId: string;
+  responsibleIds?: string[];
+  createdBy: string;
+  active: boolean;
+}
+          </pre>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <h3>permission.model.ts</h3>
+        <div class="code-block">
+          <pre>
+export interface FilePermission {
+  _id: string;
+  fileId: string;
+  entityType: 'user' | 'role';
+  entityId: string;
+  companyId: string;
+  actions: {
+    read: boolean;
+    write: boolean;
+    delete: boolean;
+    admin: boolean;
+  };
+  validUntil?: Date;
+  grantedBy: string;
+  active: boolean;
+  notes?: string;
+}
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>3. Servicios</h2>
+
+      <div class="service-card">
+        <h3>file.service.ts</h3>
+        <p>Gestiona todas las operaciones relacionadas con archivos.</p>
+        <div class="code-block">
+          <pre>
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { File } from '../models/file.model';
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FileService {
+  private apiUrl = `${environment.apiUrl}/api/files`;
+
+  constructor(private http: HttpClient) { }
+
+  // Obtener archivos (con filtros opcionales)
+  getFiles(filters?: any): Observable&lt;File[]&gt; {
+    let params = new HttpParams();
+    if (filters) {
+      if (filters.areaId) params = params.set('areaId', filters.areaId);
+      if (filters.subareaId) params = params.set('subareaId', filters.subareaId);
+      if (filters.folderId) params = params.set('folderId', filters.folderId);
+    }
+    return this.http.get&lt;File[]&gt;(this.apiUrl, { params });
+  }
+
+  // Obtener un archivo específico
+  getFile(id: string): Observable&lt;File&gt; {
+    return this.http.get&lt;File&gt;(`${this.apiUrl}/${id}`);
+  }
+
+  // Subir archivo
+  uploadFile(formData: FormData): Observable&lt;any&gt; {
+    return this.http.post(this.apiUrl, formData);
+  }
+
+  // Descargar archivo
+  downloadFile(id: string): Observable&lt;Blob&gt; {
+    return this.http.get(`${this.apiUrl}/${id}/download`, { responseType: 'blob' });
+  }
+
+  // Eliminar archivo
+  deleteFile(id: string): Observable&lt;any&gt; {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  // Verificar permisos de archivo
+  checkFilePermission(fileId: string, action: string = 'read'): Observable&lt;any&gt; {
+    return this.http.get(`${this.apiUrl}/${fileId}/permissions/check?action=${action}`);
+  }
+}
+          </pre>
+        </div>
+      </div>
+
+      <div class="service-card">
+        <h3>permission.service.ts</h3>
+        <p>Gestiona los permisos de archivos individuales.</p>
+        <div class="code-block">
+          <pre>
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { FilePermission } from '../models/permission.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PermissionService {
+  private apiUrl = `${environment.apiUrl}/api/file-permissions`;
+  private fileApiUrl = `${environment.apiUrl}/api/files`;
+
+  constructor(private http: HttpClient) { }
+
+  // Obtener permisos de un archivo
+  getFilePermissions(fileId: string): Observable&lt;FilePermission[]&gt; {
+    return this.http.get&lt;FilePermission[]&gt;(`${this.fileApiUrl}/${fileId}/permissions`);
+  }
+
+  // Añadir permiso a un archivo
+  addFilePermission(fileId: string, permission: any): Observable&lt;any&gt; {
+    return this.http.post(`${this.fileApiUrl}/${fileId}/permissions`, permission);
+  }
+
+  // Actualizar un permiso
+  updatePermission(permissionId: string, data: any): Observable&lt;any&gt; {
+    return this.http.put(`${this.apiUrl}/${permissionId}`, data);
+  }
+
+  // Eliminar un permiso
+  deletePermission(permissionId: string): Observable&lt;any&gt; {
+    return this.http.delete(`${this.apiUrl}/${permissionId}`);
+  }
+}
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>4. Componentes Principales</h2>
+
+      <div class="component-card">
+        <h3>file-explorer.component.ts</h3>
+        <p>Componente principal para navegar por la estructura de archivos.</p>
+        <div class="code-block">
+          <pre>
+import { Component, OnInit } from '@angular/core';
+import { FileService } from '../../services/file.service';
+import { AreaService } from '../../services/area.service';
+import { SubareaService } from '../../services/subarea.service';
+import { File } from '../../models/file.model';
+import { Area } from '../../models/area.model';
+import { Subarea } from '../../models/subarea.model';
+
+@Component({
+  selector: 'app-file-explorer',
+  templateUrl: './file-explorer.component.html',
+  styleUrls: ['./file-explorer.component.scss']
+})
+export class FileExplorerComponent implements OnInit {
+  areas: Area[] = [];
+  subareas: Subarea[] = [];
+  files: File[] = [];
+  
+  selectedArea: Area | null = null;
+  selectedSubarea: Subarea | null = null;
+  
+  loading = false;
+  error = '';
+
+  constructor(
+    private fileService: FileService,
+    private areaService: AreaService,
+    private subareaService: SubareaService
+  ) { }
+
+  ngOnInit(): void {
+    this.loadAreas();
+  }
+
+  loadAreas(): void {
+    this.loading = true;
+    this.areaService.getAreas().subscribe(
+      areas => {
+        this.areas = areas;
+        this.loading = false;
+      },
+      error => {
+        this.error = 'Error al cargar áreas';
+        this.loading = false;
+      }
+    );
+  }
+
+  selectArea(area: Area): void {
+    this.selectedArea = area;
+    this.selectedSubarea = null;
+    this.loadSubareas(area._id);
+    this.loadFiles({ areaId: area._id });
+  }
+
+  loadSubareas(areaId: string): void {
+    this.loading = true;
+    this.subareaService.getSubareasByArea(areaId).subscribe(
+      subareas => {
+        this.subareas = subareas;
+        this.loading = false;
+      },
+      error => {
+        this.error = 'Error al cargar subáreas';
+        this.loading = false;
+      }
+    );
+  }
+
+  selectSubarea(subarea: Subarea): void {
+    this.selectedSubarea = subarea;
+    this.loadFiles({ subareaId: subarea._id });
+  }
+
+  loadFiles(filters: any): void {
+    this.loading = true;
+    this.fileService.getFiles(filters).subscribe(
+      files => {
+        this.files = files;
+        this.loading = false;
+      },
+      error => {
+        this.error = 'Error al cargar archivos';
+        this.loading = false;
+      }
+    );
+  }
+
+  downloadFile(file: File): void {
+    this.loading = true;
+    this.fileService.downloadFile(file._id).subscribe(
+      blob => {
+        // Crear un objeto URL para el blob
+        const url = window.URL.createObjectURL(blob);
+        // Crear un elemento 'a'
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style.display = 'none';
+        a.href = url;
+        a.download = file.originalName;
+        // Descargar el archivo
+        a.click();
+        // Limpiar
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        this.loading = false;
+      },
+      error => {
+        this.error = 'Error al descargar el archivo';
+        this.loading = false;
+      }
+    );
+  }
+
+  deleteFile(file: File): void {
+    if (confirm(`¿Está seguro de eliminar el archivo "${file.originalName}"?`)) {
+      this.loading = true;
+      this.fileService.deleteFile(file._id).subscribe(
+        () => {
+          // Eliminar el archivo de la lista
+          this.files = this.files.filter(f => f._id !== file._id);
+          this.loading = false;
+        },
+        error => {
+          this.error = 'Error al eliminar el archivo';
+          this.loading = false;
+        }
+      );
+    }
+  }
+}
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>5. Implementación de Permisos</h2>
+
+      <div class="implementation-card">
+        <h3>Guards de Permisos</h3>
+        <p>Los guards aseguran que solo usuarios con los permisos adecuados puedan acceder a ciertas rutas.</p>
+        <div class="code-block">
+          <pre>
+import { Injectable } from '@angular/core';
+import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
+import { PermissionService } from '../services/permission.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FilePermissionGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private permissionService: PermissionService,
+    private router: Router
+  ) {}
+
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Observable<boolean> {
+    const fileId = route.params.id;
+    const requiredAction = route.data.requiredAction || 'read';
+    
+    if (!fileId) {
+      this.router.navigate(['/files']);
+      return of(false);
+    }
+
+    return this.permissionService.checkFilePermission(fileId, requiredAction).pipe(
+      map(response => {
+        if (response.data.permitted) {
+          return true;
+        } else {
+          this.router.navigate(['/unauthorized']);
+          return false;
+        }
+      }),
+      catchError(() => {
+        this.router.navigate(['/error']);
+        return of(false);
+      })
+    );
+  }
+}
+          </pre>
+        </div>
+      </div>
+
+      <div class="implementation-card">
+        <h3>Directiva de Control de Permisos</h3>
+        <p>Directiva personalizada para mostrar/ocultar elementos según los permisos del usuario.</p>
+        <div class="code-block">
+          <pre>
+import { Directive, Input, TemplateRef, ViewContainerRef, OnInit } from '@angular/core';
+import { FileService } from '../services/file.service';
+
+@Directive({
+  selector: '[appHasFilePermission]'
+})
+export class HasFilePermissionDirective implements OnInit {
+  @Input('appHasFilePermission') filePermission: { fileId: string, action: string } | null = null;
+  
+  private hasView = false;
+
+  constructor(
+    private templateRef: TemplateRef&lt;any&gt;,
+    private viewContainer: ViewContainerRef,
+    private fileService: FileService
+  ) { }
+
+  ngOnInit(): void {
+    this.checkPermission();
+  }
+
+  private checkPermission(): void {
+    if (!this.filePermission?.fileId || !this.filePermission?.action) {
+      this.viewContainer.clear();
+      return;
+    }
+
+    this.fileService.checkFilePermission(
+      this.filePermission.fileId, 
+      this.filePermission.action
+    ).subscribe(
+      response => {
+        if (response.data.permitted && !this.hasView) {
+          this.viewContainer.createEmbeddedView(this.templateRef);
+          this.hasView = true;
+        } else if (!response.data.permitted && this.hasView) {
+          this.viewContainer.clear();
+          this.hasView = false;
+        }
+      },
+      error => {
+        this.viewContainer.clear();
+        this.hasView = false;
+      }
+    );
+  }
+}
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>6. API Endpoints Utilizados</h2>
+      
+      <div class="api-section">
+        <h3>Gestión de Archivos</h3>
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método</th>
+              <th>Descripción</th>
+              <th>Permisos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/api/files</code></td>
+              <td>GET</td>
+              <td>Obtiene lista de archivos con filtros opcionales</td>
+              <td>Según rol y ubicación</td>
+            </tr>
+            <tr>
+              <td><code>/api/files/:id</code></td>
+              <td>GET</td>
+              <td>Obtiene detalles de un archivo</td>
+              <td>read</td>
+            </tr>
+            <tr>
+              <td><code>/api/files/:id/download</code></td>
+              <td>GET</td>
+              <td>Descarga un archivo</td>
+              <td>read</td>
+            </tr>
+            <tr>
+              <td><code>/api/files</code></td>
+              <td>POST</td>
+              <td>Sube un nuevo archivo</td>
+              <td>write</td>
+            </tr>
+            <tr>
+              <td><code>/api/files/:id</code></td>
+              <td>DELETE</td>
+              <td>Elimina un archivo</td>
+              <td>delete</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="api-section">
+        <h3>Permisos de Archivos</h3>
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método</th>
+              <th>Descripción</th>
+              <th>Permisos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/api/files/:fileId/permissions/check</code></td>
+              <td>GET</td>
+              <td>Verifica si un usuario tiene permisos para una acción</td>
+              <td>Autenticado</td>
+            </tr>
+            <tr>
+              <td><code>/api/files/:fileId/permissions</code></td>
+              <td>GET</td>
+              <td>Obtiene todos los permisos de un archivo</td>
+              <td>admin</td>
+            </tr>
+            <tr>
+              <td><code>/api/files/:fileId/permissions</code></td>
+              <td>POST</td>
+              <td>Asigna un nuevo permiso a un archivo</td>
+              <td>admin</td>
+            </tr>
+            <tr>
+              <td><code>/api/file-permissions/:permissionId</code></td>
+              <td>PUT</td>
+              <td>Modifica un permiso existente</td>
+              <td>admin</td>
+            </tr>
+            <tr>
+              <td><code>/api/file-permissions/:permissionId</code></td>
+              <td>DELETE</td>
+              <td>Elimina un permiso</td>
+              <td>admin</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="api-section">
+        <h3>Áreas y Subáreas</h3>
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método</th>
+              <th>Descripción</th>
+              <th>Permisos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/api/areas</code></td>
+              <td>GET</td>
+              <td>Obtiene áreas accesibles para el usuario</td>
+              <td>Cualquier rol</td>
+            </tr>
+            <tr>
+              <td><code>/api/areas/:areaId/subareas</code></td>
+              <td>GET</td>
+              <td>Obtiene subáreas de un área</td>
+              <td>Cualquier rol con acceso al área</td>
+            </tr>
+            <tr>
+              <td><code>/api/areas</code></td>
+              <td>POST</td>
+              <td>Crea una nueva área</td>
+              <td>admin, company_admin</td>
+            </tr>
+            <tr>
+              <td><code>/api/subareas</code></td>
+              <td>POST</td>
+              <td>Crea una nueva subárea</td>
+              <td>admin, company_admin</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>7. Flujo de Autenticación</h2>
+      <p>
+        El sistema utiliza autenticación JWT (JSON Web Token) para manejar las sesiones 
+        de usuario y proteger las rutas y recursos.
+      </p>
+
+      <div class="auth-flow">
+        <ol>
+          <li><strong>Login:</strong> Usuario proporciona credenciales</li>
+          <li><strong>Validación:</strong> Backend autentica y genera tokens</li>
+          <li><strong>Almacenamiento:</strong> Frontend guarda tokens en localStorage</li>
+          <li><strong>Peticiones:</strong> Cada petición HTTP incluye el token en el header</li>
+          <li><strong>Interceptor:</strong> Angular HttpInterceptor añade tokens automáticamente</li>
+          <li><strong>Verificación:</strong> Backend valida el token en cada petición</li>
+          <li><strong>Renovación:</strong> Refresh token para mantener la sesión</li>
+        </ol>
+      </div>
+
+      <div class="code-block">
+        <h3>auth.interceptor.ts</h3>
+        <pre>
+import { Injectable } from '@angular/core';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AuthService } from '../services/auth.service';
+
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  constructor(private authService: AuthService) {}
+
+  intercept(request: HttpRequest&lt;any&gt;, next: HttpHandler): Observable&lt;HttpEvent&lt;any&gt;&gt; {
+    // Obtener el token desde el servicio de autenticación
+    const token = this.authService.getToken();
+
+    // Si hay un token, clonar la petición y añadir el token en el header
+    if (token) {
+      request = request.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+
+    // Pasar la petición al siguiente handler
+    return next.handle(request);
+  }
+}
+        </pre>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>8. Mejores Prácticas Implementadas</h2>
+      
+      <ul class="best-practices">
+        <li>
+          <strong>Lazy Loading:</strong> Carga diferida de módulos para mejorar rendimiento
+        </li>
+        <li>
+          <strong>Interceptores HTTP:</strong> Para manejo de errores y autenticación
+        </li>
+        <li>
+          <strong>Guards:</strong> Protección de rutas basada en permisos
+        </li>
+        <li>
+          <strong>Directivas Personalizadas:</strong> Control de UI basado en permisos
+        </li>
+        <li>
+          <strong>Manejo de Estado:</strong> Servicios centralizados para datos compartidos
+        </li>
+        <li>
+          <strong>Manejo de Errores:</strong> Interceptor centralizado y presentación consistente
+        </li>
+        <li>
+          <strong>Componentes Reutilizables:</strong> Estructura modular y componentizada
+        </li>
+      </ul>
+    </div>
+
+    <footer class="doc-footer">
+      <p>Documentación de Implementación Frontend - Sistema de Archivos con Permisos</p>
+      <p class="copyright">© 2023 Todos los derechos reservados</p>
+    </footer>
+  </div>
+</body>
+</html> 

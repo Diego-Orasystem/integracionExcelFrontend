@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentación: Gestión de Áreas y Subáreas</title>
+  <link rel="stylesheet" href="documentacion-gestion-areas-subareas.css">
+</head>
+<body>
+  <div class="doc-section">
+    <div class="doc-header">
+      <h1>Documentación: Gestión de Áreas y Subáreas</h1>
+      <p class="version">Versión 1.0 - Mayo 2023</p>
+    </div>
+
+    <div class="doc-card intro">
+      <h2>Descripción General</h2>
+      <p>
+        Esta funcionalidad implementa la estructura organizacional básica de la aplicación, permitiendo la creación y administración jerárquica de áreas y subáreas dentro de cada compañía. Es una parte fundamental del sistema que facilita la organización de archivos, asignación de responsabilidades y control de permisos.
+      </p>
+      <div class="feature-highlight">
+        <h3>Características principales:</h3>
+        <ul>
+          <li><span class="highlight">Jerarquía organizacional:</span> Estructura de áreas y subáreas anidadas.</li>
+          <li><span class="highlight">Control granular:</span> Permisos específicos para cada nivel.</li>
+          <li><span class="highlight">Asignación de responsables:</span> Gestión de usuarios responsables por área/subárea.</li>
+          <li><span class="highlight">Integración con archivos:</span> Categorización de documentos por área/subárea.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <h2>Estructura del Modelo</h2>
+      <p>En el backend, la estructura está definida por dos modelos principales:</p>
+      
+      <div class="code-block">
+        <h4>Modelo de Área</h4>
+        <pre><code>
+// Ejemplo de modelo Area en MongoDB/Mongoose
+const AreaSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'El nombre del área es obligatorio'],
+    trim: true
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
+  },
+  responsibleUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  active: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true
+});
+        </code></pre>
+      </div>
+
+      <div class="code-block">
+        <h4>Modelo de Subárea</h4>
+        <pre><code>
+// Ejemplo de modelo Subarea en MongoDB/Mongoose
+const SubareaSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'El nombre de la subárea es obligatorio'],
+    trim: true
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  areaId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Area',
+    required: true
+  },
+  responsibleUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  active: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true
+});
+        </code></pre>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <h2>Diagrama de Relaciones</h2>
+      <div class="diagram">
+        <div class="entity company">
+          <div class="entity-title">Compañía</div>
+          <div class="entity-relation">1:N</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="entity area">
+          <div class="entity-title">Área</div>
+          <div class="entity-relation">1:N</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="entity subarea">
+          <div class="entity-title">Subárea</div>
+          <div class="entity-relation">1:N</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="entity files">
+          <div class="entity-title">Archivos</div>
+        </div>
+      </div>
+      <p class="diagram-caption">Una compañía puede tener múltiples áreas, cada área puede tener múltiples subáreas, y cada subárea puede contener múltiples archivos.</p>
+    </div>
+
+    <div class="doc-card">
+      <h2>Funcionalidades y Permisos</h2>
+      <div class="permissions-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Acción</th>
+              <th>Admin</th>
+              <th>Admin Compañía</th>
+              <th>Usuario Control</th>
+              <th>Usuario Responsable</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Crear Área</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✗</td>
+              <td>✗</td>
+            </tr>
+            <tr>
+              <td>Editar Área</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✗</td>
+              <td>✗</td>
+            </tr>
+            <tr>
+              <td>Eliminar Área</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✗</td>
+              <td>✗</td>
+            </tr>
+            <tr>
+              <td>Ver Áreas</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✓</td>
+            </tr>
+            <tr>
+              <td>Crear Subárea</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✗</td>
+              <td>✗</td>
+            </tr>
+            <tr>
+              <td>Editar Subárea</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✗</td>
+              <td>✗</td>
+            </tr>
+            <tr>
+              <td>Eliminar Subárea</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✗</td>
+              <td>✗</td>
+            </tr>
+            <tr>
+              <td>Ver Subáreas</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✓</td>
+            </tr>
+            <tr>
+              <td>Asignar Responsable</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>✗</td>
+              <td>✗</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <h2>Ejemplo visual de jerarquía</h2>
+      <div class="area-tree">
+        <div class="area">
+          <span class="area-title">Área: Recursos Humanos</span>
+          <div class="area-info">Responsable: María García</div>
+          <div class="subareas">
+            <div class="subarea">
+              <div class="subarea-title">Subárea: Reclutamiento</div>
+              <div class="subarea-info">Responsable: Juan López</div>
+            </div>
+            <div class="subarea">
+              <div class="subarea-title">Subárea: Nómina</div>
+              <div class="subarea-info">Responsable: Ana Martínez</div>
+            </div>
+          </div>
+        </div>
+        <div class="area">
+          <span class="area-title">Área: Tecnología</span>
+          <div class="area-info">Responsable: Carlos Rodríguez</div>
+          <div class="subareas">
+            <div class="subarea">
+              <div class="subarea-title">Subárea: Desarrollo</div>
+              <div class="subarea-info">Responsable: Pedro Sánchez</div>
+            </div>
+            <div class="subarea">
+              <div class="subarea-title">Subárea: Soporte</div>
+              <div class="subarea-info">Responsable: Laura Gómez</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <h2>Implementación en Angular</h2>
+      
+      <h3>1. Modelos en TypeScript</h3>
+      <div class="code-block">
+        <h4>Modelo Area (area.model.ts)</h4>
+        <pre><code>
+export interface Area {
+  _id?: string;
+  name: string;
+  description?: string;
+  companyId: string;
+  responsibleUserId?: string;
+  active: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+  
+  // Propiedades para la UI
+  responsibleUserName?: string;
+  companyName?: string;
+  subareaCount?: number;
+}
+        </code></pre>
+      </div>
+
+      <div class="code-block">
+        <h4>Modelo Subarea (subarea.model.ts)</h4>
+        <pre><code>
+export interface Subarea {
+  _id?: string;
+  name: string;
+  description?: string;
+  areaId: string;
+  responsibleUserId?: string;
+  active: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+  
+  // Propiedades para la UI
+  responsibleUserName?: string;
+  areaName?: string;
+  fileCount?: number;
+}
+        </code></pre>
+      </div>
+
+      <h3>2. Servicios para API</h3>
+      <div class="code-block">
+        <h4>AreaService (area.service.ts)</h4>
+        <pre><code>
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Area } from '../models/area.model';
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AreaService {
+  private apiUrl = `${environment.apiUrl}/areas`;
+
+  constructor(private http: HttpClient) { }
+
+  getAreas(companyId?: string): Observable<Area[]> {
+    const url = companyId ? `${this.apiUrl}?companyId=${companyId}` : this.apiUrl;
+    return this.http.get<Area[]>(url);
+  }
+
+  getAreaById(id: string): Observable<Area> {
+    return this.http.get<Area>(`${this.apiUrl}/${id}`);
+  }
+
+  createArea(area: Area): Observable<Area> {
+    return this.http.post<Area>(this.apiUrl, area);
+  }
+
+  updateArea(id: string, area: Area): Observable<Area> {
+    return this.http.put<Area>(`${this.apiUrl}/${id}`, area);
+  }
+
+  deleteArea(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+}
+        </code></pre>
+      </div>
+
+      <div class="code-block">
+        <h4>SubareaService (subarea.service.ts)</h4>
+        <pre><code>
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Subarea } from '../models/subarea.model';
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SubareaService {
+  private apiUrl = `${environment.apiUrl}/subareas`;
+
+  constructor(private http: HttpClient) { }
+
+  getSubareas(areaId?: string): Observable<Subarea[]> {
+    const url = areaId ? `${this.apiUrl}?areaId=${areaId}` : this.apiUrl;
+    return this.http.get<Subarea[]>(url);
+  }
+
+  getSubareaById(id: string): Observable<Subarea> {
+    return this.http.get<Subarea>(`${this.apiUrl}/${id}`);
+  }
+
+  createSubarea(subarea: Subarea): Observable<Subarea> {
+    return this.http.post<Subarea>(this.apiUrl, subarea);
+  }
+
+  updateSubarea(id: string, subarea: Subarea): Observable<Subarea> {
+    return this.http.put<Subarea>(`${this.apiUrl}/${id}`, subarea);
+  }
+
+  deleteSubarea(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+}
+        </code></pre>
+      </div>
+
+      <h3>3. Componentes Angular</h3>
+      <div class="code-block">
+        <h4>Componente de Lista de Áreas (area-list.component.ts)</h4>
+        <pre><code>
+import { Component, OnInit } from '@angular/core';
+import { AreaService } from '../../services/area.service';
+import { Area } from '../../models/area.model';
+import { AuthService } from '../../services/auth.service';
+
+@Component({
+  selector: 'app-area-list',
+  templateUrl: './area-list.component.html',
+  styleUrls: ['./area-list.component.scss']
+})
+export class AreaListComponent implements OnInit {
+  areas: Area[] = [];
+  loading = false;
+  error = '';
+  
+  // Para control de permisos
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
+
+  constructor(
+    private areaService: AreaService,
+    private authService: AuthService
+  ) { }
+
+  ngOnInit(): void {
+    this.checkPermissions();
+    this.loadAreas();
+  }
+
+  private checkPermissions(): void {
+    const currentUser = this.authService.getCurrentUser();
+    this.canCreate = this.authService.hasPermission('area_create');
+    this.canEdit = this.authService.hasPermission('area_update');
+    this.canDelete = this.authService.hasPermission('area_delete');
+  }
+
+  private loadAreas(): void {
+    this.loading = true;
+    
+    // Si es admin de compañía, filtrar por su compañía
+    const currentUser = this.authService.getCurrentUser();
+    const companyId = currentUser?.role?.code === 'company_admin' ? currentUser?.companyId : null;
+    
+    this.areaService.getAreas(companyId).subscribe(
+      (data) => {
+        this.areas = data;
+        this.loading = false;
+      },
+      (err) => {
+        this.error = 'Error al cargar áreas: ' + err.message;
+        this.loading = false;
+      }
+    );
+  }
+
+  deleteArea(id: string): void {
+    if (confirm('¿Está seguro de eliminar esta área? Se eliminarán también todas sus subáreas.')) {
+      this.areaService.deleteArea(id).subscribe(
+        () => {
+          this.areas = this.areas.filter(area => area._id !== id);
+        },
+        (err) => {
+          this.error = 'Error al eliminar: ' + err.message;
+        }
+      );
+    }
+  }
+}
+        </code></pre>
+      </div>
+
+      <div class="code-block">
+        <h4>Componente de Formulario de Área (area-form.component.html)</h4>
+        <pre><code>
+&lt;!-- Ejemplo de formulario para creación/edición de área -->
+&lt;form [formGroup]="areaForm" (ngSubmit)="onSubmit()">
+  &lt;div class="form-group">
+    &lt;label for="name">Nombre del Área&lt;/label>
+    &lt;input 
+      type="text" 
+      class="form-control" 
+      id="name" 
+      formControlName="name" 
+      [ngClass]="{'is-invalid': submitted && f.name.errors}">
+    &lt;div *ngIf="submitted && f.name.errors" class="invalid-feedback">
+      &lt;div *ngIf="f.name.errors.required">El nombre es obligatorio&lt;/div>
+    &lt;/div>
+  &lt;/div>
+
+  &lt;div class="form-group">
+    &lt;label for="description">Descripción&lt;/label>
+    &lt;textarea 
+      class="form-control" 
+      id="description" 
+      formControlName="description" 
+      rows="3">
+    &lt;/textarea>
+  &lt;/div>
+
+  &lt;div class="form-group" *ngIf="isAdmin">
+    &lt;label for="companyId">Compañía&lt;/label>
+    &lt;select 
+      class="form-control" 
+      id="companyId" 
+      formControlName="companyId"
+      [ngClass]="{'is-invalid': submitted && f.companyId.errors}">
+      &lt;option value="">Seleccione una compañía&lt;/option>
+      &lt;option *ngFor="let company of companies" [value]="company._id">
+        {{company.name}}
+      &lt;/option>
+    &lt;/select>
+    &lt;div *ngIf="submitted && f.companyId.errors" class="invalid-feedback">
+      &lt;div *ngIf="f.companyId.errors.required">La compañía es obligatoria&lt;/div>
+    &lt;/div>
+  &lt;/div>
+
+  &lt;div class="form-group">
+    &lt;label for="responsibleUserId">Responsable&lt;/label>
+    &lt;select 
+      class="form-control" 
+      id="responsibleUserId" 
+      formControlName="responsibleUserId">
+      &lt;option value="">Sin responsable asignado&lt;/option>
+      &lt;option *ngFor="let user of users" [value]="user._id">
+        {{user.firstName}} {{user.lastName}}
+      &lt;/option>
+    &lt;/select>
+  &lt;/div>
+
+  &lt;div class="form-check mb-3">
+    &lt;input 
+      type="checkbox" 
+      class="form-check-input" 
+      id="active" 
+      formControlName="active">
+    &lt;label class="form-check-label" for="active">Activo&lt;/label>
+  &lt;/div>
+
+  &lt;div class="btn-group">
+    &lt;button type="submit" class="btn btn-primary" [disabled]="loading">
+      &lt;span *ngIf="loading" class="spinner-border spinner-border-sm mr-1">&lt;/span>
+      Guardar
+    &lt;/button>
+    &lt;button type="button" class="btn btn-secondary ml-2" (click)="cancel()">Cancelar&lt;/button>
+  &lt;/div>
+&lt;/form>
+        </code></pre>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <h2>Guía de implementación</h2>
+      <ol>
+        <li>
+          <h3>Backend:</h3>
+          <ul>
+            <li>Implementar modelos de MongoDB/Mongoose para Area y Subarea.</li>
+            <li>Crear endpoints RESTful para CRUD de áreas y subáreas.</li>
+            <li>Implementar middleware de autenticación y autorización basado en roles.</li>
+            <li>Desarrollar validaciones para evitar eliminación de áreas con subáreas (o implementar eliminación en cascada).</li>
+          </ul>
+        </li>
+        <li>
+          <h3>Frontend:</h3>
+          <ul>
+            <li>Desarrollar módulo de Angular para gestión de áreas/subáreas.</li>
+            <li>Implementar componentes de listado, formularios y detalles.</li>
+            <li>Crear servicios para conectar con API del backend.</li>
+            <li>Implementar directivas para control de acceso basado en permisos.</li>
+            <li>Desarrollar interfaz para visualización jerárquica (árbol de áreas/subáreas).</li>
+          </ul>
+        </li>
+        <li>
+          <h3>Testing:</h3>
+          <ul>
+            <li>Desarrollar tests unitarios para servicios y componentes.</li>
+            <li>Crear tests de integración para flujos completos de gestión.</li>
+            <li>Validar permisos en diferentes roles de usuario.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <div class="doc-card">
+      <h2>Referencia de API</h2>
+      <p>A continuación se detallan los endpoints disponibles para la gestión de áreas y subáreas:</p>
+
+      <div class="api-section">
+        <h3>API de Áreas</h3>
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>URL</th>
+              <th>Descripción</th>
+              <th>Parámetros</th>
+              <th>Respuesta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="method get">GET</td>
+              <td>/api/areas</td>
+              <td>Obtiene todas las áreas</td>
+              <td>
+                <b>Query:</b>
+                <ul>
+                  <li><code>companyId</code>: ID de la compañía (opcional)</li>
+                  <li><code>active</code>: true/false (opcional)</li>
+                </ul>
+              </td>
+              <td>Array de objetos área</td>
+            </tr>
+            <tr>
+              <td class="method get">GET</td>
+              <td>/api/areas/:id</td>
+              <td>Obtiene un área por ID</td>
+              <td>
+                <b>Path:</b>
+                <ul>
+                  <li><code>id</code>: ID del área</li>
+                </ul>
+              </td>
+              <td>Objeto área</td>
+            </tr>
+            <tr>
+              <td class="method post">POST</td>
+              <td>/api/areas</td>
+              <td>Crea una nueva área</td>
+              <td>
+                <b>Body:</b>
+                <pre>{
+  "name": "string (requerido)",
+  "description": "string",
+  "companyId": "ObjectId (requerido)",
+  "responsibleUserId": "ObjectId"
+}</pre>
+              </td>
+              <td>Objeto área creada</td>
+            </tr>
+            <tr>
+              <td class="method put">PUT</td>
+              <td>/api/areas/:id</td>
+              <td>Actualiza un área existente</td>
+              <td>
+                <b>Path:</b>
+                <ul>
+                  <li><code>id</code>: ID del área</li>
+                </ul>
+                <b>Body:</b>
+                <pre>{
+  "name": "string",
+  "description": "string",
+  "responsibleUserId": "ObjectId",
+  "active": boolean
+}</pre>
+              </td>
+              <td>Objeto área actualizada</td>
+            </tr>
+            <tr>
+              <td class="method delete">DELETE</td>
+              <td>/api/areas/:id</td>
+              <td>Elimina un área</td>
+              <td>
+                <b>Path:</b>
+                <ul>
+                  <li><code>id</code>: ID del área</li>
+                </ul>
+                <b>Query:</b>
+                <ul>
+                  <li><code>force</code>: true/false - Eliminar aunque tenga subáreas (opcional)</li>
+                </ul>
+              </td>
+              <td>Mensaje de confirmación</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="api-section">
+        <h3>API de Subáreas</h3>
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>URL</th>
+              <th>Descripción</th>
+              <th>Parámetros</th>
+              <th>Respuesta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="method get">GET</td>
+              <td>/api/subareas</td>
+              <td>Obtiene todas las subáreas</td>
+              <td>
+                <b>Query:</b>
+                <ul>
+                  <li><code>areaId</code>: ID del área (opcional)</li>
+                  <li><code>active</code>: true/false (opcional)</li>
+                </ul>
+              </td>
+              <td>Array de objetos subárea</td>
+            </tr>
+            <tr>
+              <td class="method get">GET</td>
+              <td>/api/subareas/:id</td>
+              <td>Obtiene una subárea por ID</td>
+              <td>
+                <b>Path:</b>
+                <ul>
+                  <li><code>id</code>: ID de la subárea</li>
+                </ul>
+              </td>
+              <td>Objeto subárea</td>
+            </tr>
+            <tr>
+              <td class="method post">POST</td>
+              <td>/api/subareas</td>
+              <td>Crea una nueva subárea</td>
+              <td>
+                <b>Body:</b>
+                <pre>{
+  "name": "string (requerido)",
+  "description": "string",
+  "areaId": "ObjectId (requerido)",
+  "responsibleUserId": "ObjectId"
+}</pre>
+              </td>
+              <td>Objeto subárea creada</td>
+            </tr>
+            <tr>
+              <td class="method put">PUT</td>
+              <td>/api/subareas/:id</td>
+              <td>Actualiza una subárea existente</td>
+              <td>
+                <b>Path:</b>
+                <ul>
+                  <li><code>id</code>: ID de la subárea</li>
+                </ul>
+                <b>Body:</b>
+                <pre>{
+  "name": "string",
+  "description": "string",
+  "responsibleUserId": "ObjectId",
+  "active": boolean
+}</pre>
+              </td>
+              <td>Objeto subárea actualizada</td>
+            </tr>
+            <tr>
+              <td class="method delete">DELETE</td>
+              <td>/api/subareas/:id</td>
+              <td>Elimina una subárea</td>
+              <td>
+                <b>Path:</b>
+                <ul>
+                  <li><code>id</code>: ID de la subárea</li>
+                </ul>
+                <b>Query:</b>
+                <ul>
+                  <li><code>force</code>: true/false - Eliminar aunque tenga archivos (opcional)</li>
+                </ul>
+              </td>
+              <td>Mensaje de confirmación</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="api-section">
+        <h3>API de Asignación de Responsables</h3>
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>URL</th>
+              <th>Descripción</th>
+              <th>Parámetros</th>
+              <th>Respuesta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="method post">POST</td>
+              <td>/api/areas/:id/assign-responsible</td>
+              <td>Asigna un responsable a un área</td>
+              <td>
+                <b>Path:</b>
+                <ul>
+                  <li><code>id</code>: ID del área</li>
+                </ul>
+                <b>Body:</b>
+                <pre>{
+  "responsibleUserId": "ObjectId (requerido)"
+}</pre>
+              </td>
+              <td>Objeto área actualizada</td>
+            </tr>
+            <tr>
+              <td class="method post">POST</td>
+              <td>/api/subareas/:id/assign-responsible</td>
+              <td>Asigna un responsable a una subárea</td>
+              <td>
+                <b>Path:</b>
+                <ul>
+                  <li><code>id</code>: ID de la subárea</li>
+                </ul>
+                <b>Body:</b>
+                <pre>{
+  "responsibleUserId": "ObjectId (requerido)"
+}</pre>
+              </td>
+              <td>Objeto subárea actualizada</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="api-examples">
+        <h3>Ejemplos de Uso</h3>
+        
+        <div class="code-block">
+          <h4>Crear un área</h4>
+          <pre><code>
+// Ejemplo con fetch
+fetch('/api/areas', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + token
+  },
+  body: JSON.stringify({
+    name: 'Recursos Humanos',
+    description: 'Departamento de gestión de personal',
+    companyId: '60d21b4667d0d8992e610c85'
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+          </code></pre>
+        </div>
+
+        <div class="code-block">
+          <h4>Obtener subáreas de un área</h4>
+          <pre><code>
+// Ejemplo con Axios
+axios.get('/api/subareas', {
+  params: { areaId: '60d21b4667d0d8992e610c86' },
+  headers: { 'Authorization': 'Bearer ' + token }
+})
+.then(response => {
+  const subareas = response.data;
+  console.log(subareas);
+})
+.catch(error => console.error('Error:', error));
+          </code></pre>
+        </div>
+      </div>
+
+      <div class="api-notes">
+        <h3>Notas importantes sobre las APIs</h3>
+        <ul>
+          <li>Todas las solicitudes requieren autenticación mediante token JWT en el encabezado <code>Authorization</code>.</li>
+          <li>Los permisos necesarios para cada endpoint se validan según el rol del usuario.</li>
+          <li>Las respuestas de error incluyen un código HTTP apropiado y un mensaje descriptivo.</li>
+          <li>La eliminación de áreas y subáreas es lógica por defecto (cambia <code>active</code> a <code>false</code>).</li>
+          <li>El parámetro <code>force</code> en los endpoints DELETE permite eliminación física si se establece en <code>true</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <h2>Consideraciones y mejores prácticas</h2>
+      <ul>
+        <li><strong>Rendimiento:</strong> Utilizar indexes en MongoDB para consultas frecuentes.</li>
+        <li><strong>Seguridad:</strong> Aplicar validación de permisos tanto en cliente como en servidor.</li>
+        <li><strong>UX:</strong> Implementar drag-and-drop para reorganizar áreas y subáreas si es necesario.</li>
+        <li><strong>Escalabilidad:</strong> Considerar la posibilidad de más niveles jerárquicos en el futuro.</li>
+        <li><strong>Integración:</strong> Enlazar áreas/subáreas con módulo de archivos para organización documental.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html> 

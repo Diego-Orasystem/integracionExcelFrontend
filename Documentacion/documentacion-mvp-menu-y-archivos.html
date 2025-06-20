@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP - Menú Dinámico y Archivos de Ejemplo</title>
+    <link rel="stylesheet" href="documentacion-mvp-menu-y-archivos.css">
+</head>
+<body>
+    <header>
+        <h1>MVP - Menú Dinámico y Archivos de Ejemplo</h1>
+        <p class="subtitle">Versión 1.0 - Mayo 2024</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#intro">Introducción</a></li>
+            <li><a href="#menu">Menú Dinámico</a></li>
+            <li><a href="#archivos">Archivos de Ejemplo</a></li>
+            <li><a href="#permisos">Permisos</a></li>
+            <li><a href="#ui">Interfaz de Usuario</a></li>
+            <li><a href="#conclusiones">Conclusiones</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="intro">
+            <h2>Introducción</h2>
+            <p>Este documento presenta el MVP (Producto Mínimo Viable) para la implementación de dos funcionalidades clave en el sistema:</p>
+            <ol>
+                <li><strong>Menú Dinámico basado en Permisos:</strong> El sistema mostrará opciones de menú personalizadas según el rol y los permisos asignados a cada usuario.</li>
+                <li><strong>Archivos de Ejemplo en Subáreas:</strong> Permitirá adjuntar archivos de plantilla/ejemplo a las subáreas para que los usuarios puedan descargarlos como referencia.</li>
+            </ol>
+            <p>Este MVP se centra en ofrecer la funcionalidad básica necesaria para cumplir con estos requisitos, manteniendo una interfaz intuitiva y garantizando la seguridad.</p>
+        </section>
+
+        <section id="menu">
+            <h2>Menú Dinámico</h2>
+            <h3>Funcionamiento</h3>
+            <p>El menú dinámico funcionará de la siguiente manera:</p>
+            <ul>
+                <li>Al iniciar sesión, el sistema cargará todos los permisos asociados al rol del usuario.</li>
+                <li>Basado en esos permisos, se generará dinámicamente la estructura del menú.</li>
+                <li>Solo se mostrarán las opciones a las que el usuario tenga acceso según su rol.</li>
+                <li>Se implementará un control adicional a nivel de componentes para garantizar que, incluso si un usuario accede a una URL directamente, no pueda ver contenido restringido.</li>
+            </ul>
+
+            <h3>Roles del Sistema</h3>
+            <p>El sistema cuenta con los siguientes roles predefinidos:</p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rol</th>
+                            <th>Código</th>
+                            <th>Descripción</th>
+                            <th>Opciones de Menú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Administrador de Aplicación</td>
+                            <td>admin</td>
+                            <td>Control total sobre el sistema</td>
+                            <td>Todas las opciones</td>
+                        </tr>
+                        <tr>
+                            <td>Administrador de Compañía</td>
+                            <td>company_admin</td>
+                            <td>Control sobre una compañía específica</td>
+                            <td>Gestión de áreas, subáreas, usuarios (de su compañía) y archivos</td>
+                        </tr>
+                        <tr>
+                            <td>Usuario de Control</td>
+                            <td>user_control</td>
+                            <td>Monitorea actividades y archivos en su área</td>
+                            <td>Visualización de archivos y reportes de su área</td>
+                        </tr>
+                        <tr>
+                            <td>Usuario Responsable</td>
+                            <td>user_responsible</td>
+                            <td>Responsable de gestionar subáreas</td>
+                            <td>Gestión de archivos en sus subáreas asignadas</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="archivos">
+            <h2>Archivos de Ejemplo</h2>
+            <h3>Concepto</h3>
+            <p>Los archivos de ejemplo son plantillas o modelos que se adjuntan a cada subárea para que los usuarios puedan entender el formato y estructura de los archivos que deben subir en esa sección.</p>
+
+            <h3>Características principales</h3>
+            <ul>
+                <li><strong>Protección:</strong> Los archivos de ejemplo no pueden ser eliminados por los usuarios normales, solo por administradores.</li>
+                <li><strong>Descarga:</strong> Todos los usuarios con acceso a la subárea pueden descargar estos archivos de ejemplo.</li>
+                <li><strong>Identificación:</strong> Los archivos de ejemplo se mostrarán claramente identificados en la interfaz con un distintivo visual.</li>
+                <li><strong>Gestión:</strong> Solo administradores podrán añadir, actualizar o eliminar estos archivos de ejemplo.</li>
+            </ul>
+
+            <h3>Implementación básica</h3>
+            <p>Para el MVP, se implementará:</p>
+            <ul>
+                <li>Capacidad para adjuntar hasta 3 archivos de ejemplo por subárea.</li>
+                <li>Opción para incluir una descripción breve de cada archivo de ejemplo.</li>
+                <li>Vista previa para archivos Excel, PDF y documentos de texto.</li>
+                <li>Restricción de permisos para que los usuarios normales no puedan eliminar estos archivos.</li>
+            </ul>
+        </section>
+
+        <section id="permisos">
+            <h2>Estructura de Permisos</h2>
+            <p>El sistema utilizará la estructura de permisos existente, añadiendo los siguientes permisos específicos:</p>
+            
+            <h3>Permisos para el Menú</h3>
+            <ul>
+                <li><code>menu_admin</code>: Acceso al menú de administración general</li>
+                <li><code>menu_company</code>: Acceso al menú de gestión de compañía</li>
+                <li><code>menu_area</code>: Acceso al menú de áreas</li>
+                <li><code>menu_subarea</code>: Acceso al menú de subáreas</li>
+                <li><code>menu_files</code>: Acceso al menú de archivos</li>
+                <li><code>menu_reports</code>: Acceso al menú de reportes</li>
+                <li><code>menu_users</code>: Acceso al menú de usuarios</li>
+            </ul>
+
+            <h3>Permisos para Archivos de Ejemplo</h3>
+            <ul>
+                <li><code>sample_file_create</code>: Crear archivos de ejemplo</li>
+                <li><code>sample_file_read</code>: Ver/descargar archivos de ejemplo</li>
+                <li><code>sample_file_update</code>: Actualizar archivos de ejemplo</li>
+                <li><code>sample_file_delete</code>: Eliminar archivos de ejemplo</li>
+            </ul>
+        </section>
+
+        <section id="ui">
+            <h2>Interfaz de Usuario</h2>
+            
+            <h3>Menú Dinámico</h3>
+            <div class="image-container">
+                <div class="mock-ui">
+                    <div class="sidebar">
+                        <div class="logo">SISTEMA</div>
+                        <div class="menu-item active">Dashboard</div>
+                        <div class="menu-item">Áreas</div>
+                        <div class="menu-item">Subáreas</div>
+                        <div class="menu-item">Archivos</div>
+                        <div class="menu-item">Reportes</div>
+                        <div class="menu-item">Usuarios</div>
+                    </div>
+                    <div class="content">
+                        <div class="header">
+                            <div>Dashboard Principal</div>
+                            <div class="user">Admin <span class="dropdown">▼</span></div>
+                        </div>
+                        <div class="main-content">
+                            <p class="caption">Vista de menú para rol de Administrador</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Archivos de Ejemplo en Subáreas</h3>
+            <div class="image-container">
+                <div class="mock-ui">
+                    <div class="sidebar mini">
+                        <div class="logo mini">S</div>
+                    </div>
+                    <div class="content wide">
+                        <div class="header">
+                            <div>Subárea: Contabilidad</div>
+                            <div class="user">Admin <span class="dropdown">▼</span></div>
+                        </div>
+                        <div class="main-content files">
+                            <div class="section-title">
+                                <h4>Archivos de Ejemplo</h4>
+                                <button class="add-button">+ Añadir</button>
+                            </div>
+                            <div class="file-list">
+                                <div class="file-item sample">
+                                    <div class="file-icon">📄</div>
+                                    <div class="file-info">
+                                        <div class="file-name">plantilla_balance.xlsx</div>
+                                        <div class="file-desc">Plantilla para balance mensual</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="download-btn">Descargar</button>
+                                    </div>
+                                </div>
+                                <div class="file-item sample">
+                                    <div class="file-icon">📄</div>
+                                    <div class="file-info">
+                                        <div class="file-name">formato_gastos.xlsx</div>
+                                        <div class="file-desc">Formato para registro de gastos</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="download-btn">Descargar</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="section-title mt-20">
+                                <h4>Archivos Subidos</h4>
+                            </div>
+                            <div class="file-list">
+                                <div class="file-item">
+                                    <div class="file-icon">📄</div>
+                                    <div class="file-info">
+                                        <div class="file-name">balance_abril2024.xlsx</div>
+                                        <div class="file-desc">Subido por: Usuario1 - 12/04/2024</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="download-btn">Descargar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusiones">
+            <h2>Conclusiones y Próximos Pasos</h2>
+            <p>Este MVP proporciona la estructura básica necesaria para implementar el menú dinámico basado en permisos y la funcionalidad de archivos de ejemplo en subáreas.</p>
+            
+            <h3>Limitaciones del MVP</h3>
+            <ul>
+                <li>El menú dinámico solo considera permisos a nivel de secciones principales, no subsecciones.</li>
+                <li>Los archivos de ejemplo están limitados a 3 por subárea.</li>
+                <li>No se incluye la edición en línea de archivos de ejemplo.</li>
+            </ul>
+
+            <h3>Evolución Futura</h3>
+            <ul>
+                <li>Implementar un sistema de menú más granular con subsecciones dinámicas.</li>
+                <li>Añadir categorización de archivos de ejemplo.</li>
+                <li>Incluir versionado de archivos de ejemplo.</li>
+                <li>Desarrollar una vista previa mejorada para más tipos de archivos.</li>
+                <li>Agregar estadísticas de descarga de archivos de ejemplo.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Sistema de Gestión Documental - MVP Versión 1.0</p>
+        <p>Mayo 2024</p>
+    </footer>
+</body>
+</html> 

@@ -1,0 +1,40 @@
+<div class="app-container" [ngClass]="{'sidebar-open': showSidebar}">
+  <!-- Header/Navbar -->
+  <header class="navbar navbar-expand-lg" *ngIf="showHeader">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" (click)="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <a class="navbar-brand text-white" href="/dashboard">
+        <i class="fas fa-file-excel me-2"></i>
+        {{ 'GLOBAL.TITLE' | translate }}
+      </a>
+      <div class="d-flex" *ngIf="isLoggedIn">
+        <!-- Selector de idioma -->
+        <app-language-selector class="me-3"></app-language-selector>
+        
+        <div class="dropdown">
+          <button class="btn btn-link dropdown-toggle text-white" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user-circle me-1"></i>
+            <span>{{ 'GLOBAL.ACCOUNT' | translate }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" routerLink="/profile"><i class="fas fa-user me-2"></i>{{ 'GLOBAL.PROFILE' | translate }}</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item" (click)="logout()"><i class="fas fa-sign-out-alt me-2"></i>{{ 'GLOBAL.LOGOUT' | translate }}</button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Menú Lateral Dinámico -->
+  <app-side-menu *ngIf="showSidebar && isLoggedIn"></app-side-menu>
+
+  <!-- Main Content -->
+  <main class="main-content" [ngClass]="{'ml-0': !showSidebar || !isLoggedIn, 'full-width': !showSidebar || !isLoggedIn}">
+    <div class="container-fluid py-3">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div> 

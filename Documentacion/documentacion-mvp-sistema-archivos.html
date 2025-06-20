@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentación: MVP Sistema de Archivos con Permisos</title>
+  <link rel="stylesheet" href="documentacion-mvp-sistema-archivos.css">
+</head>
+<body>
+  <div class="doc-container">
+    <header class="doc-header">
+      <h1>MVP: Sistema de Archivos con Permisos</h1>
+      <p class="doc-subtitle">Documentación de Producto Mínimo Viable</p>
+    </header>
+
+    <div class="doc-section">
+      <h2>1. Descripción General</h2>
+      <p>
+        El MVP del Sistema de Archivos implementa la gestión básica de documentos con una
+        estructura organizacional jerárquica (compañías, áreas y subáreas) y un sistema de 
+        permisos basado en roles que garantiza que los usuarios solo accedan a los archivos 
+        autorizados según su nivel y asignaciones.
+      </p>
+
+      <div class="key-features">
+        <h3>Características Principales</h3>
+        <ul>
+          <li><span class="badge feature">Estructura Jerárquica</span> Organización de archivos por compañía, área y subárea</li>
+          <li><span class="badge feature">Permisos por Rol</span> Control de acceso basado en roles predefinidos</li>
+          <li><span class="badge feature">Operaciones Básicas</span> Subir, descargar y eliminar archivos</li>
+          <li><span class="badge feature">Explorador de Archivos</span> Navegación intuitiva por la estructura de carpetas</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>2. Estructura del Sistema</h2>
+      
+      <div class="structure-diagram">
+        <div class="structure-level company">
+          <div class="structure-box">Compañía</div>
+          <div class="structure-arrow">↓</div>
+        </div>
+        <div class="structure-level area">
+          <div class="structure-box">Áreas</div>
+          <div class="structure-arrow">↓</div>
+        </div>
+        <div class="structure-level subarea">
+          <div class="structure-box">Subáreas</div>
+          <div class="structure-arrow">↓</div>
+        </div>
+        <div class="structure-level folder">
+          <div class="structure-box">Carpetas</div>
+          <div class="structure-arrow">↓</div>
+        </div>
+        <div class="structure-level file">
+          <div class="structure-box">Archivos</div>
+        </div>
+      </div>
+
+      <div class="entity-descriptions">
+        <div class="entity-card">
+          <h3>Compañía</h3>
+          <p>Nivel superior de organización. Cada usuario pertenece a una compañía.</p>
+        </div>
+        <div class="entity-card">
+          <h3>Área</h3>
+          <p>División principal dentro de una compañía (Ej: Finanzas, RRHH, Operaciones).</p>
+        </div>
+        <div class="entity-card">
+          <h3>Subárea</h3>
+          <p>Subdivisión de un área (Ej: Contabilidad, Tesorería dentro de Finanzas).</p>
+        </div>
+        <div class="entity-card">
+          <h3>Carpeta</h3>
+          <p>Contenedor de archivos. Cada área y subárea tiene una carpeta asociada.</p>
+        </div>
+        <div class="entity-card">
+          <h3>Archivo</h3>
+          <p>Documento almacenado en el sistema (principalmente archivos Excel).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>3. Sistema de Permisos</h2>
+      
+      <div class="permissions-card">
+        <h3>Roles del Sistema</h3>
+        <table class="permissions-table">
+          <thead>
+            <tr>
+              <th>Rol</th>
+              <th>Descripción</th>
+              <th>Alcance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="role-name">Administrador</td>
+              <td>Control total sobre el sistema</td>
+              <td>Todas las compañías, áreas y subáreas</td>
+            </tr>
+            <tr>
+              <td class="role-name">Admin. de Compañía</td>
+              <td>Control sobre una compañía específica</td>
+              <td>Todas las áreas y subáreas de su compañía</td>
+            </tr>
+            <tr>
+              <td class="role-name">Usuario Control</td>
+              <td>Monitoreo de actividades y archivos</td>
+              <td>Áreas asignadas (solo lectura)</td>
+            </tr>
+            <tr>
+              <td class="role-name">Usuario Responsable</td>
+              <td>Gestión de archivos en subáreas</td>
+              <td>Subáreas específicas asignadas</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="permissions-card">
+        <h3>Matriz de Permisos por Operación</h3>
+        <table class="operations-table">
+          <thead>
+            <tr>
+              <th>Operación</th>
+              <th>Admin</th>
+              <th>Admin. Compañía</th>
+              <th>Usuario Control</th>
+              <th>Usuario Responsable</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ver archivos</td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Descargar archivos</td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Subir archivos</td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission no">✗</span></td>
+              <td><span class="permission yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Eliminar archivos</td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission no">✗</span></td>
+              <td><span class="permission limited">±</span></td>
+            </tr>
+            <tr>
+              <td>Crear carpetas</td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission no">✗</span></td>
+              <td><span class="permission no">✗</span></td>
+            </tr>
+            <tr>
+              <td>Gestionar áreas/subáreas</td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission yes">✓</span></td>
+              <td><span class="permission no">✗</span></td>
+              <td><span class="permission no">✗</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="table-legend">
+          <span class="permission yes">✓</span> Permitido
+          <span class="permission no">✗</span> No permitido
+          <span class="permission limited">±</span> Permitido con restricciones
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>4. Funcionalidades Principales</h2>
+
+      <div class="feature-cards">
+        <div class="feature-card">
+          <div class="feature-icon">📂</div>
+          <h3>Explorador de Archivos</h3>
+          <p>Permite navegar por la estructura de carpetas según los permisos del usuario.</p>
+          <ul class="feature-details">
+            <li>Visualización de estructura jerárquica</li>
+            <li>Navegación intuitiva entre carpetas</li>
+            <li>Filtros por tipo de archivo y fecha</li>
+            <li>Vista adaptada a los permisos del usuario</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⬆️</div>
+          <h3>Carga de Archivos</h3>
+          <p>Permite subir nuevos archivos al sistema dentro de la estructura jerárquica.</p>
+          <ul class="feature-details">
+            <li>Validación de permisos de escritura</li>
+            <li>Comprobación de tipo de archivo</li>
+            <li>Validación de nombre duplicado</li>
+            <li>Barra de progreso de carga</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⬇️</div>
+          <h3>Descarga de Archivos</h3>
+          <p>Permite obtener archivos almacenados en el sistema.</p>
+          <ul class="feature-details">
+            <li>Validación de permisos de lectura</li>
+            <li>Descarga directa al navegador</li>
+            <li>Registro de descargas en logs</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🗑️</div>
+          <h3>Eliminación de Archivos</h3>
+          <p>Permite eliminar archivos con confirmación previa.</p>
+          <ul class="feature-details">
+            <li>Validación de permisos de eliminación</li>
+            <li>Confirmación obligatoria</li>
+            <li>Eliminación lógica vs. física</li>
+            <li>Registro detallado en logs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>5. Arquitectura Técnica</h2>
+
+      <div class="tech-stack">
+        <h3>Stack Tecnológico</h3>
+        <div class="stack-items">
+          <div class="stack-item">
+            <div class="stack-name">Backend</div>
+            <div class="stack-tech">Node.js + Express</div>
+          </div>
+          <div class="stack-item">
+            <div class="stack-name">Frontend</div>
+            <div class="stack-tech">Angular</div>
+          </div>
+          <div class="stack-item">
+            <div class="stack-name">Base de Datos</div>
+            <div class="stack-tech">MongoDB</div>
+          </div>
+          <div class="stack-item">
+            <div class="stack-name">Autenticación</div>
+            <div class="stack-tech">JWT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="api-section">
+        <h3>Principales Endpoints de API</h3>
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/api/folders</code></td>
+              <td>GET</td>
+              <td>Obtiene la lista de carpetas accesibles</td>
+            </tr>
+            <tr>
+              <td><code>/api/files</code></td>
+              <td>GET</td>
+              <td>Obtiene archivos (filtrados por carpeta)</td>
+            </tr>
+            <tr>
+              <td><code>/api/files</code></td>
+              <td>POST</td>
+              <td>Sube un nuevo archivo</td>
+            </tr>
+            <tr>
+              <td><code>/api/files/:id</code></td>
+              <td>GET</td>
+              <td>Descarga un archivo</td>
+            </tr>
+            <tr>
+              <td><code>/api/files/:id</code></td>
+              <td>DELETE</td>
+              <td>Elimina un archivo</td>
+            </tr>
+            <tr>
+              <td><code>/api/areas</code></td>
+              <td>GET</td>
+              <td>Obtiene las áreas accesibles</td>
+            </tr>
+            <tr>
+              <td><code>/api/areas/:areaId/subareas</code></td>
+              <td>GET</td>
+              <td>Obtiene subáreas de un área</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>6. Flujos de Usuario</h2>
+
+      <div class="user-flow">
+        <h3>Subir un Archivo</h3>
+        <ol class="flow-steps">
+          <li>Usuario navega a la ubicación deseada (área/subárea/carpeta)</li>
+          <li>Usuario hace clic en "Subir Archivo" (si tiene permisos)</li>
+          <li>Se abre diálogo para seleccionar archivo</li>
+          <li>Usuario selecciona archivo y confirma</li>
+          <li>Sistema valida permisos y tipo de archivo</li>
+          <li>Archivo se sube y aparece en la lista</li>
+        </ol>
+      </div>
+
+      <div class="user-flow">
+        <h3>Acceder a un Archivo Restringido</h3>
+        <ol class="flow-steps">
+          <li>Usuario intenta navegar a una ubicación sin permisos</li>
+          <li>Sistema verifica permisos del usuario</li>
+          <li>Se muestra mensaje "Acceso denegado: No tiene permisos para esta ubicación"</li>
+          <li>Usuario es redirigido al nivel superior al que tiene acceso</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>7. Interfaz de Usuario</h2>
+
+      <div class="ui-mockup">
+        <h3>Explorador de Archivos</h3>
+        <div class="mockup-img">
+          <div class="mockup-placeholder">
+            <div class="mockup-sidebar">
+              <div class="mockup-area">Área: Finanzas</div>
+              <div class="mockup-subarea">Subárea: Contabilidad</div>
+              <div class="mockup-subarea active">Subárea: Tesorería</div>
+              <div class="mockup-subarea">Subárea: Presupuestos</div>
+            </div>
+            <div class="mockup-content">
+              <div class="mockup-toolbar">
+                <div class="mockup-breadcrumb">Finanzas > Tesorería</div>
+                <div class="mockup-actions">
+                  <button class="mockup-btn">⬆️ Subir</button>
+                </div>
+              </div>
+              <div class="mockup-files">
+                <div class="mockup-file">
+                  <div class="mockup-file-icon">📊</div>
+                  <div class="mockup-file-name">Flujo_Mayo_2023.xlsx</div>
+                </div>
+                <div class="mockup-file">
+                  <div class="mockup-file-icon">📊</div>
+                  <div class="mockup-file-name">Flujo_Junio_2023.xlsx</div>
+                </div>
+                <div class="mockup-file">
+                  <div class="mockup-file-icon">📊</div>
+                  <div class="mockup-file-name">Proyección_Q3.xlsx</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>8. Futuras Iteraciones</h2>
+      <p>Características planificadas para versiones posteriores al MVP:</p>
+      <ul class="future-features">
+        <li><span class="badge future">Previsualización</span> Visor integrado de archivos Excel sin necesidad de descargar</li>
+        <li><span class="badge future">Versionado</span> Control de versiones de archivos con historial de cambios</li>
+        <li><span class="badge future">Comentarios</span> Posibilidad de añadir comentarios a los archivos</li>
+        <li><span class="badge future">Permisos Granulares</span> Permisos a nivel de archivo individual</li>
+        <li><span class="badge future">Colaboración</span> Edición colaborativa de archivos</li>
+        <li><span class="badge future">Búsqueda Avanzada</span> Búsqueda por contenido dentro de archivos</li>
+      </ul>
+    </div>
+
+    <footer class="doc-footer">
+      <p>Sistema de Gestión de Archivos con Permisos - Documentación MVP</p>
+      <p class="copyright">© 2023 Todos los derechos reservados</p>
+    </footer>
+  </div>
+</body>
+</html> 

@@ -1,0 +1,4 @@
+<div class="alert alert-{{ type }}" role="alert">
+  {{ message }}
+  <button *ngIf="dismissible" class="close-btn" (click)="onClose()">×</button>
+</div> 

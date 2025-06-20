@@ -1,0 +1,83 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2>Registro de Usuario</h2>
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <!-- Nombre -->
+      <div class="form-group">
+        <label for="name">Nombre:</label>
+        <input 
+          type="text" 
+          id="name" 
+          formControlName="name" 
+          class="form-control"
+          [ngClass]="{ 'is-invalid': registerForm.get('name')?.touched && registerForm.get('name')?.invalid }"
+        >
+        <div *ngIf="registerForm.get('name')?.touched && registerForm.get('name')?.invalid" class="error-message">
+          <span *ngIf="registerForm.get('name')?.errors?.['required']">El nombre es requerido</span>
+        </div>
+      </div>
+      
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input 
+          type="email" 
+          id="email" 
+          formControlName="email" 
+          class="form-control"
+          [ngClass]="{ 'is-invalid': registerForm.get('email')?.touched && registerForm.get('email')?.invalid }"
+        >
+        <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="error-message">
+          <span *ngIf="registerForm.get('email')?.errors?.['required']">El email es requerido</span>
+          <span *ngIf="registerForm.get('email')?.errors?.['email']">Formato de email inválido</span>
+        </div>
+      </div>
+      
+      <!-- Contraseña -->
+      <div class="form-group">
+        <label for="password">Contraseña:</label>
+        <input 
+          type="password" 
+          id="password" 
+          formControlName="password" 
+          class="form-control"
+          [ngClass]="{ 'is-invalid': registerForm.get('password')?.touched && registerForm.get('password')?.invalid }"
+        >
+        <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" class="error-message">
+          <span *ngIf="registerForm.get('password')?.errors?.['required']">La contraseña es requerida</span>
+          <span *ngIf="registerForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</span>
+        </div>
+      </div>
+      
+      <!-- Confirmar Contraseña -->
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar Contraseña:</label>
+        <input 
+          type="password" 
+          id="confirmPassword" 
+          formControlName="confirmPassword" 
+          class="form-control"
+          [ngClass]="{ 'is-invalid': registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid }"
+        >
+        <div *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid" class="error-message">
+          <span *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Confirmar contraseña es requerido</span>
+          <span *ngIf="registerForm.get('confirmPassword')?.errors?.['mustMatch']">Las contraseñas no coinciden</span>
+        </div>
+      </div>
+      
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+      
+      <div class="form-actions">
+        <button type="submit" [disabled]="registerForm.invalid || loading" class="register-btn">
+          <span *ngIf="loading" class="spinner"></span>
+          <span *ngIf="!loading">Registrarse</span>
+        </button>
+      </div>
+      
+      <div class="form-links">
+        <span>¿Ya tienes una cuenta?</span>
+        <a routerLink="../login">Iniciar Sesión</a>
+      </div>
+    </form>
+  </div>
+</div> 

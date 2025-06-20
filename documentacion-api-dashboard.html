@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación API para Dashboard de Visualizaciones</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+        }
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .endpoint {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        .method {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get {
+            background-color: #61affe;
+        }
+        .post {
+            background-color: #49cc90;
+        }
+        .put {
+            background-color: #fca130;
+        }
+        .delete {
+            background-color: #f93e3e;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Documentación API para Dashboard de Visualizaciones</h1>
+    
+    <p>Este documento describe las APIs necesarias, la estructura de datos y los formatos requeridos para implementar el backend que soportará las visualizaciones interactivas del panel de control de archivos.</p>
+    
+    <h2>Resumen de Visualizaciones</h2>
+    <p>El dashboard incluye cuatro tipos principales de visualizaciones:</p>
+    <ol>
+        <li><strong>Sistema de pestañas</strong>: Para alternar entre las diferentes visualizaciones</li>
+        <li><strong>Visualización de Treemap</strong>: Representa áreas y subáreas como bloques rectangulares</li>
+        <li><strong>Visualización de Hexágonos</strong>: Organiza la información en un patrón de panal de abejas</li>
+        <li><strong>Visualización de Árbol Radial</strong>: Muestra la estructura jerárquica en forma circular</li>
+    </ol>
+
+    <h2>Estructura de Datos General</h2>
+    <p>Todas las visualizaciones comparten una estructura de datos jerárquica común:</p>
+    
+    <pre><code>{
+  "areas": [
+    {
+      "id": "string",
+      "name": "string",
+      "totalFiles": number,
+      "existingFiles": number,
+      "pendingFiles": number,
+      "responsible": "string",
+      "responsibleEmail": "string",
+      "completionRate": number,
+      "subAreas": [
+        {
+          "id": "string",
+          "name": "string",
+          "totalFiles": number,
+          "existingFiles": number,
+          "pendingFiles": number,
+          "responsible": "string",
+          "responsibleEmail": "string",
+          "completionRate": number
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalFiles": number,
+    "existingFiles": number,
+    "pendingFiles": number,
+    "completionRate": number
+  }
+}</code></pre>
+
+    <h2>Endpoints API Requeridos</h2>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span> <code>/api/dashboard/areas</code>
+        <p>Obtiene todas las áreas con sus subáreas y métricas asociadas.</p>
+        
+        <h4>Parámetros de consulta opcionales:</h4>
+        <table>
+            <tr>
+                <th>Parámetro</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+            </tr>
+            <tr>
+                <td>search</td>
+                <td>string</td>
+                <td>Filtra áreas y subáreas por nombre o responsable</td>
+            </tr>
+            <tr>
+                <td>minCompletion</td>
+                <td>number</td>
+                <td>Filtra por tasa de completitud mínima</td>
+            </tr>
+            <tr>
+                <td>maxCompletion</td>
+                <td>number</td>
+                <td>Filtra por tasa de completitud máxima</td>
+            </tr>
+        </table>
+        
+        <h4>Respuesta:</h4>
+        <p>Objeto JSON con la estructura descrita anteriormente.</p>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span> <code>/api/dashboard/areas/{areaId}</code>
+        <p>Obtiene información detallada de un área específica con todas sus subáreas.</p>
+        
+        <h4>Parámetros de ruta:</h4>
+        <table>
+            <tr>
+                <th>Parámetro</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+            </tr>
+            <tr>
+                <td>areaId</td>
+                <td>string</td>
+                <td>Identificador único del área</td>
+            </tr>
+        </table>
+        
+        <h4>Respuesta:</h4>
+        <pre><code>{
+  "id": "string",
+  "name": "string",
+  "totalFiles": number,
+  "existingFiles": number,
+  "pendingFiles": number,
+  "responsible": "string",
+  "responsibleEmail": "string",
+  "completionRate": number,
+  "subAreas": [
+    {
+      "id": "string",
+      "name": "string",
+      "totalFiles": number,
+      "existingFiles": number,
+      "pendingFiles": number,
+      "responsible": "string",
+      "responsibleEmail": "string",
+      "completionRate": number
+    }
+  ]
+}</code></pre>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span> <code>/api/dashboard/summary</code>
+        <p>Obtiene un resumen de las métricas globales para el panel de control.</p>
+        
+        <h4>Respuesta:</h4>
+        <pre><code>{
+  "totalFiles": number,
+  "existingFiles": number,
+  "pendingFiles": number,
+  "completionRate": number
+}</code></pre>
+    </div>
+
+    <h2>Requisitos Específicos por Visualización</h2>
+    
+    <h3>1. Visualización de Treemap</h3>
+    <p>El Treemap utiliza la estructura de datos principal, pero requiere cálculos específicos:</p>
+    <ul>
+        <li>El tamaño de cada bloque debe ser proporcional a <code>totalFiles</code></li>
+        <li>El color debe representar la <code>completionRate</code></li>
+    </ul>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span> <code>/api/dashboard/visualizations/treemap</code>
+        <p>Endpoint opcional para obtener datos preformateados para la visualización treemap.</p>
+        
+        <h4>Respuesta:</h4>
+        <pre><code>{
+  "name": "Áreas",
+  "value": 0,
+  "children": [
+    {
+      "name": "string",
+      "value": number,
+      "completionRate": number,
+      "responsible": "string",
+      "data": {
+        // Datos completos del área
+      },
+      "children": [
+        {
+          "name": "string",
+          "value": number,
+          "completionRate": number,
+          "responsible": "string",
+          "data": {
+            // Datos completos de la subárea
+          }
+        }
+      ]
+    }
+  ]
+}</code></pre>
+    </div>
+    
+    <h3>2. Visualización de Hexágonos</h3>
+    <p>La visualización de hexágonos requiere datos adicionales para posicionamiento:</p>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span> <code>/api/dashboard/visualizations/hexagons</code>
+        <p>Endpoint opcional para obtener datos preformateados para la visualización de hexágonos.</p>
+        
+        <h4>Respuesta:</h4>
+        <pre><code>{
+  "nodes": [
+    {
+      "id": "string",
+      "name": "string",
+      "value": number,
+      "completionRate": number,
+      "responsible": "string",
+      "type": "area|subarea",
+      "parentId": "string", // Solo para subareas
+      "data": {
+        // Datos completos del área o subárea
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": "string", // ID del nodo origen
+      "target": "string", // ID del nodo destino
+      "value": number // Fuerza de la conexión
+    }
+  ]
+}</code></pre>
+    </div>
+    
+    <h3>3. Visualización de Árbol Radial</h3>
+    <p>El árbol radial utiliza la estructura jerárquica estándar pero con formato específico:</p>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span> <code>/api/dashboard/visualizations/radialtree</code>
+        <p>Endpoint opcional para obtener datos preformateados para la visualización de árbol radial.</p>
+        
+        <h4>Respuesta:</h4>
+        <pre><code>{
+  "name": "Áreas",
+  "value": 0,
+  "children": [
+    {
+      "name": "string",
+      "value": number,
+      "data": {
+        "completionRate": number,
+        "responsible": "string",
+        // Otros datos del área
+      },
+      "children": [
+        {
+          "name": "string",
+          "value": number,
+          "data": {
+            "completionRate": number,
+            "responsible": "string",
+            // Otros datos de la subárea
+          }
+        }
+      ]
+    }
+  ]
+}</code></pre>
+    </div>
+
+    <h2>Cálculos Requeridos en el Backend</h2>
+    
+    <h3>Cálculo de Tasas de Completitud</h3>
+    <p>El backend debe calcular automáticamente la tasa de completitud para cada área y subárea:</p>
+    <pre><code>completionRate = (existingFiles / totalFiles) * 100</code></pre>
+    
+    <h3>Agregación de Datos</h3>
+    <p>El backend debe agregar correctamente los datos de las subáreas para calcular los totales de cada área:</p>
+    <ul>
+        <li><code>totalFiles</code>: Suma de los archivos totales de todas las subáreas</li>
+        <li><code>existingFiles</code>: Suma de los archivos existentes de todas las subáreas</li>
+        <li><code>pendingFiles</code>: Suma de los archivos pendientes de todas las subáreas</li>
+    </ul>
+
+    <h2>Requisitos de Rendimiento</h2>
+    <ul>
+        <li>Tiempo de respuesta máximo recomendado: <strong>500ms</strong></li>
+        <li>Soporte para al menos <strong>50 áreas</strong> con hasta <strong>20 subáreas</strong> cada una</li>
+        <li>Implementar caché para mejorar el rendimiento de las consultas frecuentes</li>
+    </ul>
+
+    <h2>Consideraciones de Seguridad</h2>
+    <ul>
+        <li>Implementar autenticación mediante tokens JWT</li>
+        <li>Validar todos los parámetros de entrada para prevenir inyecciones</li>
+        <li>Establecer permisos basados en roles para acceso a datos sensibles</li>
+    </ul>
+
+    <div class="note">
+        <h4>Nota importante:</h4>
+        <p>Aunque se han definido endpoints específicos para cada visualización, es posible utilizar únicamente el endpoint principal <code>/api/dashboard/areas</code> y realizar las transformaciones de datos necesarias en el frontend. Los endpoints específicos son opcionales y pueden implementarse para optimizar el rendimiento.</p>
+    </div>
+
+    <h2>Ejemplos de Implementación</h2>
+    
+    <h3>Ejemplo de respuesta de API para áreas</h3>
+    <pre><code>{
+  "areas": [
+    {
+      "id": "1",
+      "name": "Recursos Humanos",
+      "totalFiles": 45,
+      "existingFiles": 38,
+      "pendingFiles": 7,
+      "responsible": "Ana Martínez",
+      "responsibleEmail": "ana.martinez@empresa.com",
+      "completionRate": 84,
+      "subAreas": [
+        {
+          "id": "1-1",
+          "name": "Nóminas",
+          "totalFiles": 12,
+          "existingFiles": 12,
+          "pendingFiles": 0,
+          "responsible": "Carlos López",
+          "responsibleEmail": "carlos.lopez@empresa.com",
+          "completionRate": 100
+        },
+        {
+          "id": "1-2",
+          "name": "Reclutamiento",
+          "totalFiles": 18,
+          "existingFiles": 15,
+          "pendingFiles": 3,
+          "responsible": "Laura Sánchez",
+          "responsibleEmail": "laura.sanchez@empresa.com",
+          "completionRate": 83
+        },
+        {
+          "id": "1-3",
+          "name": "Capacitación",
+          "totalFiles": 15,
+          "existingFiles": 11,
+          "pendingFiles": 4,
+          "responsible": "Ana Martínez",
+          "responsibleEmail": "ana.martinez@empresa.com",
+          "completionRate": 73
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Finanzas",
+      "totalFiles": 72,
+      "existingFiles": 68,
+      "pendingFiles": 4,
+      "responsible": "Miguel Rodríguez",
+      "responsibleEmail": "miguel.rodriguez@empresa.com",
+      "completionRate": 94,
+      "subAreas": [
+        {
+          "id": "2-1",
+          "name": "Contabilidad",
+          "totalFiles": 32,
+          "existingFiles": 30,
+          "pendingFiles": 2,
+          "responsible": "Sofía Hernández",
+          "responsibleEmail": "sofia.hernandez@empresa.com",
+          "completionRate": 94
+        },
+        {
+          "id": "2-2",
+          "name": "Presupuestos",
+          "totalFiles": 28,
+          "existingFiles": 28,
+          "pendingFiles": 0,
+          "responsible": "Miguel Rodríguez",
+          "responsibleEmail": "miguel.rodriguez@empresa.com",
+          "completionRate": 100
+        },
+        {
+          "id": "2-3",
+          "name": "Tesorería",
+          "totalFiles": 12,
+          "existingFiles": 10,
+          "pendingFiles": 2,
+          "responsible": "Javier González",
+          "responsibleEmail": "javier.gonzalez@empresa.com",
+          "completionRate": 83
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalFiles": 155,
+    "existingFiles": 131,
+    "pendingFiles": 24,
+    "completionRate": 84
+  }
+}</code></pre>
+
+    <h2>Tecnologías Recomendadas para el Backend</h2>
+    <ul>
+        <li><strong>Lenguaje/Framework</strong>: Node.js con Express, Java con Spring Boot, o .NET Core</li>
+        <li><strong>Base de datos</strong>: MongoDB para estructura de datos jerárquica o PostgreSQL/MySQL para modelo relacional</li>
+        <li><strong>Caché</strong>: Redis para almacenamiento en caché de respuestas frecuentes</li>
+        <li><strong>Autenticación</strong>: JWT con OAuth 2.0</li>
+    </ul>
+
+    <h2>Integración con el Frontend</h2>
+    <p>El frontend está implementado en Angular y utiliza D3.js para las visualizaciones. Para una integración correcta:</p>
+    <ul>
+        <li>Asegurar que las respuestas JSON mantengan la estructura esperada</li>
+        <li>Implementar CORS para permitir solicitudes desde el dominio del frontend</li>
+        <li>Proporcionar mensajes de error descriptivos en formato JSON</li>
+        <li>Considerar la implementación de WebSockets para actualizaciones en tiempo real</li>
+    </ul>
+
+    <h2>Pruebas y Validación</h2>
+    <p>Se recomienda implementar los siguientes tipos de pruebas:</p>
+    <ul>
+        <li><strong>Pruebas unitarias</strong>: Para validar los cálculos de métricas</li>
+        <li><strong>Pruebas de integración</strong>: Para verificar el correcto funcionamiento de los endpoints</li>
+        <li><strong>Pruebas de carga</strong>: Para asegurar el rendimiento bajo condiciones de uso intensivo</li>
+    </ul>
+</body>
+</html> 

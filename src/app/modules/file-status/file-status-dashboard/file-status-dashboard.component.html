@@ -1,0 +1,272 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h2><i class="fas fa-chart-pie"></i> {{ 'FILE_STATUS.VISUALIZATION' | translate }}</h2>
+  </div>
+  
+  <div class="filter-controls">
+    <div class="control-group">
+      <label><i class="fas fa-layer-group"></i> {{ 'FILE_STATUS.GROUP_BY' | translate }}:</label>
+      <select [formControl]="groupByControl" class="select-styled">
+        <option value="folder">{{ 'FILE_STATUS.FOLDER' | translate }}</option>
+        <option value="date">{{ 'GLOBAL.DATE' | translate }}</option>
+        <option value="type">{{ 'GLOBAL.TYPE' | translate }}</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label><i class="fas fa-calendar-alt"></i> {{ 'FILE_STATUS.PERIOD' | translate }}:</label>
+      <select [formControl]="timeFrameControl" class="select-styled">
+        <option value="week">{{ 'FILE_STATUS.LAST_WEEK' | translate }}</option>
+        <option value="month">{{ 'GLOBAL.LAST_MONTH' | translate }}</option>
+        <option value="all">{{ 'GLOBAL.ALL' | translate }}</option>
+      </select>
+    </div>
+    
+    <div class="refresh-button">
+      <button class="btn-refresh" (click)="loadData()" title="{{ 'ACTIONS.REFRESH' | translate }}">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Resumen de progreso general -->
+  <div class="progress-overview">
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-chart-pie"></i> {{ 'FILE_STATUS.GENERAL_PROGRESS' | translate }}</h3>
+      </div>
+      <div class="card-content centered-content">
+        <div class="progress-container">
+          <div class="large-progress-ring">
+            <div class="percentage">{{getCompletionPercentage()}}%</div>
+            <svg width="280" height="280" viewBox="0 0 280 280">
+              <!-- Círculos decorativos externos -->
+              <circle cx="140" cy="140" r="135" fill="none" stroke="#f7fafc" stroke-width="2" stroke-dasharray="3,5" />
+              <circle cx="140" cy="140" r="130" fill="none" stroke="#e2e8f0" stroke-width="3" />
+              
+              <!-- Círculo de fondo del progreso -->
+              <circle cx="140" cy="140" r="110" fill="none" stroke="#e6e6e6" stroke-width="20"/>
+              
+              <!-- Círculo de progreso principal -->
+              <circle 
+                cx="140" 
+                cy="140" 
+                r="110" 
+                fill="none" 
+                [attr.stroke]="overallStats.overallCompletionRate > 0.7 ? '#2ecc71' : (overallStats.overallCompletionRate > 0.4 ? '#f39c12' : '#e74c3c')"
+                stroke-width="20"
+                stroke-dasharray="691.15"
+                [attr.stroke-dashoffset]="691.15 * (1 - overallStats.overallCompletionRate)"
+                transform="rotate(-90 140 140)"
+              />
+              
+              <!-- Efectos de brillo -->
+              <circle cx="140" cy="140" r="110" fill="none" 
+                stroke="url(#progressGradient)" stroke-width="3" 
+                stroke-dasharray="691.15"
+                [attr.stroke-dashoffset]="691.15 * (1 - overallStats.overallCompletionRate)"
+                transform="rotate(-90 140 140)"
+              />
+              
+              <!-- Definiciones de gradientes -->
+              <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="rgba(255,255,255,0.8)" />
+                  <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          
+          <div class="progress-info">
+            <div class="completion-label">{{ 'FILE_STATUS.COMPLETED' | translate }}</div>
+            <div class="chart-sublabel">{{overallStats.totalExistingFiles}} de {{overallStats.totalExpectedFiles}} {{ 'GLOBAL.TOTAL_FILES' | translate }}</div>
+            <div class="data-source">
+              <span *ngIf="subareaStats.length > 0">
+                {{ 'FILE_STATUS.DATA_CALCULATED' | translate }} {{subareaStats.length}} {{ 'FILE_STATUS.SUBAREAS_IN' | translate }} {{overallStats.totalAreas}} {{ 'FILE_STATUS.AREAS_TOTAL' | translate }}
+              </span>
+              <span *ngIf="subareaStats.length === 0 && areaStats.length > 0">
+                {{ 'FILE_STATUS.DATA_CALCULATED_FROM' | translate }} {{areaStats.length}} {{ 'FILE_STATUS.AREAS' | translate }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-summary">
+          <div class="summary-stat">
+            <div class="stat-icon existing">
+              <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{overallStats.totalExistingFiles}}</div>
+              <div class="stat-label">{{ 'GLOBAL.EXISTING_FILES' | translate }}</div>
+            </div>
+          </div>
+          <div class="summary-stat">
+            <div class="stat-icon missing">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{overallStats.totalMissingFiles}}</div>
+              <div class="stat-label">{{ 'GLOBAL.MISSING_FILES' | translate }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visualización de Áreas y Subáreas -->
+  <div class="dashboard-content">
+    <!-- Columna izquierda: Lista de Áreas -->
+    <div class="areas-column">
+      <div class="card full-height">
+        <div class="card-header">
+          <h3><i class="fas fa-sitemap"></i> {{ 'FILE_STATUS.AREAS' | translate }}</h3>
+        </div>
+        <div class="card-content">
+          <div class="areas-list" *ngIf="areaStats && areaStats.length > 0">
+            <div class="area-item" 
+                 *ngFor="let area of areaStats" 
+                 [class.active]="selectedArea === area._id"
+                 (click)="selectArea(area._id)">
+              <div class="area-header">
+                <h4 class="area-name"><i class="fas fa-folder"></i> {{area.name}}</h4>
+                <div class="completion-badge" [ngClass]="{'complete': area.completionRate >= 1, 'partial': area.completionRate > 0.5 && area.completionRate < 1, 'low': area.completionRate > 0 && area.completionRate <= 0.5, 'empty': area.completionRate <= 0}">
+                  {{(area.completionRate * 100).toFixed(0)}}%
+                </div>
+              </div>
+              <div class="area-stats">
+                <div class="stat">
+                  <span class="stat-label">{{ 'GLOBAL.TOTAL_FILES' | translate }}:</span>
+                  <span class="stat-value">{{area.existingFiles}}/{{area.expectedFiles}}</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" 
+                       [style.width.%]="area.completionRate * 100"
+                       [style.background-color]="area.completionRate >= 1 ? '#2ecc71' : (area.completionRate > 0.5 ? '#f39c12' : '#e74c3c')">
+                  </div>
+                </div>
+                <div class="subarea-count" *ngIf="getSubareasForArea(area._id).length > 0">
+                  <span>{{ 'FILE_STATUS.INCLUDES' | translate }} {{getSubareasForArea(area._id).length}} {{getSubareasForArea(area._id).length !== 1 ? ('FILE_STATUS.SUBAREAS_PLURAL' | translate) : ('FILE_STATUS.SUBAREA' | translate)}}</span>
+                </div>
+              </div>
+              <div class="area-footer" *ngIf="area.responsible">
+                <span class="responsible"><i class="fas fa-user-tie"></i> {{area.responsible.name}}</span>
+              </div>
+            </div>
+            
+            <div class="no-items-message" *ngIf="!areaStats || areaStats.length === 0">
+              <i class="fas fa-folder-open"></i>
+              <p>{{ 'FILE_STATUS.NO_AREAS' | translate }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Columna derecha: Subáreas del área seleccionada -->
+    <div class="subareas-column">
+      <div class="card full-height">
+        <div class="card-header">
+          <h3><i class="fas fa-project-diagram"></i> {{ 'FILE_STATUS.SUBAREAS' | translate }}</h3>
+        </div>
+        <div class="card-content">
+          <div class="subareas-list" *ngIf="selectedArea">
+            <div class="subarea-item" *ngFor="let subarea of getSubareasForSelectedArea()">
+              <div class="subarea-header">
+                <h4 class="subarea-name"><i class="fas fa-cube"></i> {{subarea.name}}</h4>
+                <div class="completion-badge" [ngClass]="{'complete': subarea.completionRate >= 1, 'partial': subarea.completionRate > 0.5 && subarea.completionRate < 1, 'low': subarea.completionRate > 0 && subarea.completionRate <= 0.5, 'empty': subarea.completionRate <= 0}">
+                  {{(subarea.completionRate * 100).toFixed(0)}}%
+                </div>
+              </div>
+              <div class="subarea-stats">
+                <div class="stat">
+                  <span class="stat-label">{{ 'MENU.FILES' | translate }}:</span>
+                  <span class="stat-value">{{subarea.existingFiles}}/{{subarea.expectedFiles}}</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" 
+                       [style.width.%]="subarea.completionRate * 100"
+                       [style.background-color]="subarea.completionRate >= 1 ? '#2ecc71' : (subarea.completionRate > 0.5 ? '#f39c12' : '#e74c3c')">
+                  </div>
+                </div>
+                <div class="contribution-info">
+                  <span>{{ getContributionPercentage(subarea) }}% {{ 'FILE_STATUS.OF_AREA' | translate }}</span>
+                </div>
+              </div>
+              <div class="subarea-footer" *ngIf="subarea.responsible">
+                <span class="responsible"><i class="fas fa-user-tie"></i> {{subarea.responsible.name}}</span>
+              </div>
+            </div>
+            
+            <div class="no-items-message" *ngIf="!getSubareasForSelectedArea() || getSubareasForSelectedArea().length === 0">
+              <i class="fas fa-cubes"></i>
+              <p>{{ 'FILE_STATUS.NO_SUBAREAS' | translate }}</p>
+            </div>
+          </div>
+          
+          <div class="no-area-selected" *ngIf="!selectedArea">
+            <i class="fas fa-hand-point-left"></i>
+            <p>{{ 'FILE_STATUS.SELECT_AREA' | translate }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="visualization-container">
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-chart-bar"></i> {{ 'FILE_STATUS.FILES_VISUALIZATION' | translate }}</h3>
+      </div>
+      <div class="card-content">
+        <div class="files-visualization">
+          <div class="visualization-metrics">
+            <div class="metrics-header">
+              <h4>{{ 'FILE_STATUS.FILES_DISTRIBUTION' | translate }}</h4>
+            </div>
+            
+            <!-- Gráfico de barras horizontal para mostrar la proporción -->
+            <div class="horizontal-bar-chart">
+              <div class="chart-bars">
+                <div class="chart-bar existing" 
+                     [style.width.%]="overallStats.totalExistingFiles > 0 ? (overallStats.totalExistingFiles / (overallStats.totalExistingFiles + overallStats.totalMissingFiles)) * 100 : 0">
+                  <span class="bar-count" *ngIf="overallStats.totalExistingFiles > 0">{{overallStats.totalExistingFiles}}</span>
+                </div>
+                <div class="chart-bar missing" 
+                     [style.width.%]="overallStats.totalMissingFiles > 0 ? (overallStats.totalMissingFiles / (overallStats.totalExistingFiles + overallStats.totalMissingFiles)) * 100 : 0">
+                  <span class="bar-count" *ngIf="overallStats.totalMissingFiles > 0">{{overallStats.totalMissingFiles}}</span>
+                </div>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-color existing"></div>
+                  <span>{{ 'GLOBAL.EXISTING_FILES' | translate }}</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color missing"></div>
+                  <span>{{ 'GLOBAL.MISSING_FILES' | translate }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Distribución de archivos por área -->
+            <div class="metrics-header">
+              <h4>{{ 'FILE_STATUS.AREA_DISTRIBUTION' | translate }}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div *ngIf="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>{{ 'GLOBAL.LOADING_DATA' | translate }}</p>
+  </div>
+  
+  <div *ngIf="error" class="error-message">
+    <i class="fas fa-exclamation-circle"></i> {{ error }}
+  </div>
+</div> 

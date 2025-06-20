@@ -1,0 +1,81 @@
+<div class="sample-files-container">
+  <div class="sample-files-header">
+    <h2>
+      Archivos de Ejemplo
+      <span *ngIf="subareaName"> - {{subareaName}}</span>
+    </h2>
+    
+    <button class="btn btn-primary" 
+            *ngIf="canCreate"
+            (click)="openFileUploader()">
+      <i class="fas fa-plus"></i>
+      Añadir Archivo de Ejemplo
+    </button>
+  </div>
+  
+  <!-- Loader -->
+  <div class="sample-files-loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <span>Cargando archivos de ejemplo...</span>
+  </div>
+  
+  <!-- Error -->
+  <div class="sample-files-error" *ngIf="error">
+    <div class="error-message">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>{{error}}</span>
+      <button class="btn btn-primary" (click)="loadSampleFiles()">Reintentar</button>
+    </div>
+  </div>
+  
+  <!-- Lista de archivos -->
+  <ng-container *ngIf="!loading && !error">
+    <div class="sample-files-grid" *ngIf="sampleFiles.length; else noFiles">
+      <div class="sample-file-item" *ngFor="let file of sampleFiles">
+        <div class="sample-file-card" (click)="downloadFile(file.fileId)">
+          <div class="sample-file-icon">
+            <i class="fas fa-file"></i>
+          </div>
+          
+          <div class="sample-file-info">
+            <h3 class="sample-file-name" [title]="file.name">
+              {{file.name}}
+            </h3>
+            
+            <p *ngIf="file.description" class="sample-file-description" [title]="file.description">
+              {{file.description}}
+            </p>
+          </div>
+          
+          <div class="sample-file-actions">
+            <button class="btn btn-primary btn-sm" 
+                    title="Descargar archivo"
+                    (click)="downloadFile(file.fileId); $event.stopPropagation();">
+              <i class="fas fa-download"></i>
+            </button>
+            
+            <button *ngIf="canDelete" 
+                    class="btn btn-danger btn-sm" 
+                    title="Eliminar archivo"
+                    (click)="removeSampleFile(file._id); $event.stopPropagation();">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mensaje si no hay archivos -->
+    <ng-template #noFiles>
+      <div class="sample-files-empty">
+        <i class="fas fa-file-alt"></i>
+        <p>No hay archivos de ejemplo disponibles para esta subárea.</p>
+        <button class="btn btn-primary" 
+                *ngIf="canCreate"
+                (click)="openFileUploader()">
+          Añadir primer archivo de ejemplo
+        </button>
+      </div>
+    </ng-template>
+  </ng-container>
+</div> 

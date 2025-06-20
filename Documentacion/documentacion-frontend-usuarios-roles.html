@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentación Frontend - Gestión de Usuarios y Roles</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f7f9fa;
+      color: #222;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 32px 40px 40px 40px;
+    }
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 2.2rem;
+      border-bottom: 2px solid #e1e4e8;
+      padding-bottom: 10px;
+    }
+    h2 {
+      margin-top: 2.2rem;
+      font-size: 1.4rem;
+      border-left: 4px solid #3498db;
+      padding-left: 10px;
+    }
+    h3 {
+      margin-top: 1.5rem;
+      font-size: 1.1rem;
+      color: #2980b9;
+    }
+    ul, ol {
+      margin-left: 1.5rem;
+    }
+    code, pre {
+      background: #f4f4f4;
+      color: #c0392b;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 1em;
+    }
+    .example {
+      background: #f9f9fb;
+      border-left: 4px solid #3498db;
+      padding: 12px 18px;
+      margin: 18px 0;
+      border-radius: 6px;
+      font-size: 0.98em;
+    }
+    .ui-sample {
+      background: #f4f8fb;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      padding: 18px;
+      margin: 18px 0;
+    }
+    .ui-sample h4 {
+      margin-top: 0;
+      color: #2563eb;
+    }
+    .badge {
+      display: inline-block;
+      background: #eaf6ff;
+      color: #2563eb;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.9em;
+      margin-left: 6px;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+    }
+    .table th, .table td {
+      border: 1px solid #e1e4e8;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .table th {
+      background: #f0f4f8;
+    }
+    .api {
+      background: #f6f8fa;
+      border-left: 4px solid #2ecc71;
+      padding: 10px 18px;
+      margin: 18px 0;
+      border-radius: 6px;
+      font-size: 0.97em;
+    }
+    .tip {
+      background: #fffbe6;
+      border-left: 4px solid #f1c40f;
+      padding: 10px 18px;
+      margin: 18px 0;
+      border-radius: 6px;
+      color: #b38600;
+      font-size: 0.97em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gestión de Usuarios, Roles y Permisos - Frontend</h1>
+    <p>Esta guía explica cómo implementar la gestión de usuarios, roles y permisos en el frontend de la aplicación, integrando con la API backend.</p>
+
+    <h2>1. Estructura de la Gestión</h2>
+    <ul>
+      <li><b>Usuarios:</b> CRUD, activación/desactivación, asignación de roles.</li>
+      <li><b>Roles:</b> CRUD, asignación de permisos.</li>
+      <li><b>Permisos:</b> CRUD, asignación a roles y usuarios.</li>
+    </ul>
+
+    <h2>2. Flujos de UI recomendados</h2>
+    <div class="ui-sample">
+      <h4>2.1. Listado de Usuarios</h4>
+      <ul>
+        <li>Tabla con columnas: Nombre, Email, Rol principal, Estado, Acciones.</li>
+        <li>Botón <b>"Crear Usuario"</b> para abrir un formulario modal.</li>
+        <li>Acciones: Editar, Desactivar/Activar, Ver roles asignados.</li>
+      </ul>
+    </div>
+    <div class="ui-sample">
+      <h4>2.2. Asignación de Roles a Usuario</h4>
+      <ul>
+        <li>Botón <b>"Asignar Rol"</b> en la vista de detalle de usuario.</li>
+        <li>Formulario con selección de rol, área/subárea (opcional), permisos adicionales/denegados.</li>
+        <li>Listado de roles asignados con opción de revocar.</li>
+      </ul>
+    </div>
+    <div class="ui-sample">
+      <h4>2.3. Gestión de Roles</h4>
+      <ul>
+        <li>Tabla de roles: Nombre, Código, Permisos asociados, Estado.</li>
+        <li>Botón <b>"Crear Rol"</b> para abrir formulario.</li>
+        <li>Acción para editar permisos de cada rol.</li>
+      </ul>
+    </div>
+    <div class="ui-sample">
+      <h4>2.4. Gestión de Permisos</h4>
+      <ul>
+        <li>Tabla de permisos: Nombre, Código, Categoría, Acciones permitidas.</li>
+        <li>Botón <b>"Crear Permiso"</b> para abrir formulario.</li>
+      </ul>
+    </div>
+
+    <h2>3. Ejemplo de Componentes UI</h2>
+    <div class="example">
+      <b>Tabla de usuarios (Angular/React/Vue):</b>
+      <pre><code>&lt;table class="table"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Nombre&lt;/th&gt;
+      &lt;th&gt;Email&lt;/th&gt;
+      &lt;th&gt;Rol principal&lt;/th&gt;
+      &lt;th&gt;Estado&lt;/th&gt;
+      &lt;th&gt;Acciones&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr *ngFor="let user of users"&gt;
+      &lt;td&gt;{{ user.name }}&lt;/td&gt;
+      &lt;td&gt;{{ user.email }}&lt;/td&gt;
+      &lt;td&gt;{{ user.role }}&lt;/td&gt;
+      &lt;td&gt;
+        &lt;span [class]="user.active ? 'badge' : 'badge inactive'"&gt;
+          {{ user.active ? 'Activo' : 'Inactivo' }}
+        &lt;/span&gt;
+      &lt;/td&gt;
+      &lt;td&gt;
+        &lt;button (click)="editUser(user)"&gt;Editar&lt;/button&gt;
+        &lt;button (click)="toggleUser(user)"&gt;{{ user.active ? 'Desactivar' : 'Activar' }}&lt;/button&gt;
+        &lt;button (click)="viewRoles(user)"&gt;Roles&lt;/button&gt;
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+    </div>
+
+    <h2>4. Consumo de la API</h2>
+    <div class="api">
+      <b>Usuarios:</b>
+      <ul>
+        <li>GET <code>/api/users</code> - Listar usuarios</li>
+        <li>POST <code>/api/users</code> - Crear usuario</li>
+        <li>PUT <code>/api/users/:id</code> - Actualizar usuario</li>
+        <li>DELETE <code>/api/users/:id</code> - Desactivar usuario</li>
+      </ul>
+      <b>Roles:</b>
+      <ul>
+        <li>GET <code>/api/roles</code> - Listar roles</li>
+        <li>POST <code>/api/roles</code> - Crear rol</li>
+        <li>PUT <code>/api/roles/:id</code> - Actualizar rol</li>
+        <li>DELETE <code>/api/roles/:id</code> - Eliminar rol</li>
+      </ul>
+      <b>Permisos:</b>
+      <ul>
+        <li>GET <code>/api/permissions</code> - Listar permisos</li>
+        <li>POST <code>/api/permissions</code> - Crear permiso</li>
+        <li>PUT <code>/api/permissions/:id</code> - Actualizar permiso</li>
+        <li>DELETE <code>/api/permissions/:id</code> - Eliminar permiso</li>
+      </ul>
+      <b>Asignación de roles:</b>
+      <ul>
+        <li>GET <code>/api/user-roles/user/:userId</code> - Ver roles de un usuario</li>
+        <li>POST <code>/api/user-roles</code> - Asignar rol a usuario</li>
+        <li>PUT <code>/api/user-roles/:id</code> - Modificar asignación</li>
+        <li>DELETE <code>/api/user-roles/:id</code> - Revocar asignación</li>
+      </ul>
+    </div>
+
+    <h2>5. Buenas Prácticas</h2>
+    <ul>
+      <li>Utiliza <b>guards</b> o <b>hooks</b> para proteger rutas según permisos del usuario.</li>
+      <li>Oculta acciones en la UI según los permisos obtenidos del backend.</li>
+      <li>Sincroniza los catálogos de roles y permisos al iniciar sesión.</li>
+      <li>Permite al usuario ver sus propios roles y permisos.</li>
+    </ul>
+
+    <div class="tip">
+      <b>TIP:</b> Puedes usar <code>ngIf</code> (Angular), <code>v-if</code> (Vue) o <code>{condition && ...}</code> (React) para mostrar/ocultar botones según los permisos del usuario.
+    </div>
+
+    <h2>6. Ejemplo de flujo de asignación de rol</h2>
+    <ol>
+      <li>El admin navega al detalle de un usuario.</li>
+      <li>Hace clic en <b>"Asignar Rol"</b>.</li>
+      <li>Selecciona el rol, área/subárea y permisos adicionales/denegados.</li>
+      <li>Envía el formulario (POST <code>/api/user-roles</code>).</li>
+      <li>El backend responde y se actualiza la lista de roles asignados.</li>
+    </ol>
+
+    <h2>7. Referencias rápidas</h2>
+    <ul>
+      <li><b>API de usuarios:</b> <code>/api/users</code></li>
+      <li><b>API de roles:</b> <code>/api/roles</code></li>
+      <li><b>API de permisos:</b> <code>/api/permissions</code></li>
+      <li><b>API de asignación de roles:</b> <code>/api/user-roles</code></li>
+    </ul>
+  </div>
+</body>
+</html> 
