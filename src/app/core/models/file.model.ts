@@ -1,3 +1,14 @@
+export interface RemoteMetadata {
+  prefix: string | null;
+  groupName: string | null;
+  serieName: string | null;
+  branchCode: string | null;
+  requiresBranchCode: boolean;
+  companyDirectory: string | null;
+  remoteDirectory: string | null;
+  remoteFilename: string | null;
+}
+
 export interface File {
   _id: string;
   name: string;
@@ -25,6 +36,7 @@ export interface File {
     rowCount: number;
     columnCount: number;
   };
+  remoteMetadata?: RemoteMetadata | null;
   tags?: string[];
   createdAt?: Date;
   updatedAt?: Date;

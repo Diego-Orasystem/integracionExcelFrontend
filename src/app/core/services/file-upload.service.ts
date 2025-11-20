@@ -22,7 +22,20 @@ export class FileUploadService {
   /**
    * Sube un archivo al servidor con nombre personalizado
    */
-  uploadFileWithCustomName(file: File, customName: string, folderId: string, description?: string, tags?: string): Observable<FileUploadProgress> {
+  uploadFileWithCustomName(
+    file: File, 
+    customName: string, 
+    folderId: string, 
+    description?: string, 
+    tags?: string,
+    sftpOptions?: {
+      prefijo?: string;
+      groupName?: string;
+      serieName?: string;
+      branchCode?: string;
+      requiresBranchCode?: boolean;
+    }
+  ): Observable<FileUploadProgress> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('customName', customName);
@@ -38,12 +51,32 @@ export class FileUploadService {
       formData.append('tags', tags);
     }
     
+    // Campos SFTP opcionales
+    if (sftpOptions) {
+      if (sftpOptions.prefijo) {
+        formData.append('prefijo', sftpOptions.prefijo);
+      }
+      if (sftpOptions.groupName) {
+        formData.append('groupName', sftpOptions.groupName);
+      }
+      if (sftpOptions.serieName) {
+        formData.append('serieName', sftpOptions.serieName);
+      }
+      if (sftpOptions.branchCode) {
+        formData.append('branchCode', sftpOptions.branchCode);
+      }
+      if (sftpOptions.requiresBranchCode !== undefined) {
+        formData.append('requiresBranchCode', sftpOptions.requiresBranchCode.toString());
+      }
+    }
+    
     console.log('Enviando archivo con formData:', {
       file: file.name,
       customName,
       folderId,
       description: description || 'no hay',
-      tags: tags || 'no hay'
+      tags: tags || 'no hay',
+      sftpOptions: sftpOptions || 'no hay'
     });
     
     return this.http.post<ApiResponse<any>>(

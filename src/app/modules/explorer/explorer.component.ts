@@ -14,6 +14,7 @@ import { HasPermissionDirective } from '../../shared/directives/has-permission.d
 import { Folder, FolderContentResponse } from '../../core/models/folder.model';
 import { TranslateModule } from '@ngx-translate/core';
 import { FileVersionsComponent } from '../../shared/components/files/file-versions/file-versions.component';
+import { RemoteMetadata } from '../../core/models/file.model';
 import { TranslateService } from '@ngx-translate/core';
 
 interface FileItem {
@@ -27,6 +28,9 @@ interface FileItem {
   url?: string;
   path?: string;
   isFolder?: false;
+  remoteMetadata?: RemoteMetadata | null;
+  description?: string;
+  status?: string;
 }
 
 interface Breadcrumb {
@@ -142,7 +146,7 @@ interface Breadcrumb {
       
       <!-- Diálogo para subir archivo -->
       <div *ngIf="showUploadDialog" class="dialog-overlay">
-        <div class="dialog-content">
+        <div class="dialog-content upload-dialog">
           <h3>{{ 'EXPLORER.UPLOAD_EXCEL' | translate }}</h3>
           <form [formGroup]="uploadForm">
             <div class="form-group">
@@ -161,6 +165,70 @@ interface Breadcrumb {
               <label for="tags">{{ 'EXPLORER.TAGS' | translate }}:</label>
               <input type="text" id="tags" formControlName="tags">
             </div>
+            
+            <!-- Campos SFTP -->
+            <div class="sftp-section">
+              <h4>{{ 'EXPLORER.SFTP_OPTIONS' | translate }}</h4>
+              
+              <div class="form-group">
+                <label for="prefijo">{{ 'EXPLORER.PREFIX' | translate }}:</label>
+                <select id="prefijo" formControlName="prefijo">
+                  <option value="">{{ 'EXPLORER.SELECT_PREFIX' | translate }}</option>
+                  <option value="CAPEX">CAPEX</option>
+                  <option value="OPEX">OPEX</option>
+                  <option value="PLAN">PLAN</option>
+                  <option value="LEK2">LEK2</option>
+                </select>
+                <small class="form-help">{{ 'EXPLORER.PREFIX_HELP' | translate }}</small>
+              </div>
+              
+              <div class="form-group group-name-autocomplete">
+                <label for="groupName">{{ 'EXPLORER.GROUP_NAME' | translate }}:</label>
+                <div class="autocomplete-wrapper">
+                  <input 
+                    type="text" 
+                    id="groupName" 
+                    formControlName="groupName" 
+                    placeholder="{{ 'EXPLORER.GROUP_NAME_PLACEHOLDER' | translate }}" 
+                    maxlength="80"
+                    (input)="onGroupNameInput($event)"
+                    (focus)="onGroupNameInput($event)"
+                    (blur)="onGroupNameBlur()"
+                    autocomplete="off">
+                  <div class="autocomplete-suggestions" *ngIf="showGroupNameSuggestions && filteredGroupNames.length > 0">
+                    <div 
+                      class="suggestion-item" 
+                      [class.create-new]="name.startsWith('✨ Crear nuevo:')"
+                      *ngFor="let name of filteredGroupNames"
+                      (mousedown)="selectGroupName(name)"
+                      (click)="selectGroupName(name)">
+                      {{ name }}
+                    </div>
+                  </div>
+                </div>
+                <div class="groupname-warning" *ngIf="isNewGroupName">
+                  <i class="fas fa-exclamation-triangle"></i> {{ 'EXPLORER.NEW_GROUP_NAME_WARNING' | translate }}
+                </div>
+                <small class="form-help">{{ 'EXPLORER.GROUP_NAME_HELP' | translate }}</small>
+                <div class="existing-groupnames" *ngIf="groupNames.length">
+                  <label>{{ 'EXPLORER.EXISTING_GROUP_NAMES' | translate }}</label>
+                  <div class="groupname-tags">
+                    <button type="button" class="groupname-tag" *ngFor="let name of groupNames | slice:0:10" (click)="selectGroupName(name)">
+                      {{ name }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group" *ngIf="uploadForm.get('prefijo')?.value === 'LEK2'">
+                <label for="branchCode">{{ 'EXPLORER.BRANCH_CODE' | translate }}:</label>
+                <input type="text" id="branchCode" formControlName="branchCode" 
+                       placeholder="{{ 'EXPLORER.BRANCH_CODE_PLACEHOLDER' | translate }}" 
+                       maxlength="40">
+                <small class="form-help">{{ 'EXPLORER.BRANCH_CODE_HELP' | translate }}</small>
+              </div>
+            </div>
+            
             <div class="dialog-actions">
               <button type="button" class="btn-cancel" (click)="showUploadDialog = false">{{ 'GLOBAL.CANCEL' | translate }}</button>
               <button 
@@ -207,6 +275,9 @@ interface Breadcrumb {
               <div class="item-meta">{{ formatFileSize(file.size || 0) }} | {{ formatDate(file.createdAt) }}</div>
             </div>
             <div class="item-actions">
+              <button class="btn-action" (click)="showFileDetails(file._id, $event)" title="{{ 'EXPLORER.FILE_DETAILS' | translate }}">
+                <i class="fas fa-info-circle"></i>
+              </button>
               <button class="btn-action" (click)="downloadFile(file._id, $event)" title="{{ 'EXPLORER.DOWNLOAD' | translate }}">
                 <i class="fas fa-download"></i>
               </button>
@@ -251,6 +322,110 @@ interface Breadcrumb {
           </app-file-versions>
         </div>
       </div>
+
+      <!-- Diálogo de detalles del archivo -->
+      <div *ngIf="showFileDetailsDialog" class="dialog-overlay">
+        <div class="dialog-content file-details-dialog">
+          <div class="dialog-header">
+            <h3>{{ 'EXPLORER.FILE_DETAILS_TITLE' | translate }}</h3>
+            <button class="close-btn" (click)="showFileDetailsDialog = false">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <div class="file-details-body" *ngIf="!loadingFileDetails && selectedFileDetails">
+            <!-- Información básica -->
+            <section class="file-info-section">
+              <h4>{{ 'EXPLORER.GENERAL_INFO' | translate }}</h4>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label>{{ 'EXPLORER.NAME' | translate }}:</label>
+                  <span>{{ selectedFileDetails.name || selectedFileDetails.originalName }}</span>
+                </div>
+                <div class="info-item">
+                  <label>{{ 'EXPLORER.SIZE' | translate }}:</label>
+                  <span>{{ formatFileSize(selectedFileDetails.size || 0) }}</span>
+                </div>
+                <div class="info-item">
+                  <label>{{ 'EXPLORER.TYPE' | translate }}:</label>
+                  <span>{{ selectedFileDetails.mimeType }}</span>
+                </div>
+                <div class="info-item">
+                  <label>{{ 'EXPLORER.STATUS' | translate }}:</label>
+                  <span>{{ selectedFileDetails.status || 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                  <label>{{ 'EXPLORER.CREATED_AT' | translate }}:</label>
+                  <span>{{ formatDate(selectedFileDetails.createdAt) }}</span>
+                </div>
+                <div class="info-item" *ngIf="selectedFileDetails.description">
+                  <label>{{ 'EXPLORER.DESCRIPTION' | translate }}:</label>
+                  <span>{{ selectedFileDetails.description }}</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Metadata remota -->
+            <section class="remote-metadata-section" *ngIf="selectedFileDetails.remoteMetadata">
+              <h4>{{ 'EXPLORER.REMOTE_METADATA_TITLE' | translate }}</h4>
+              <div class="metadata-grid">
+                <div class="metadata-item">
+                  <label>{{ 'EXPLORER.PREFIX' | translate }}:</label>
+                  <span class="metadata-value">{{ selectedFileDetails.remoteMetadata.prefix || 'N/A' }}</span>
+                </div>
+                <div class="metadata-item">
+                  <label>{{ 'EXPLORER.GROUP_NAME' | translate }}:</label>
+                  <span class="metadata-value">{{ selectedFileDetails.remoteMetadata.groupName || 'N/A' }}</span>
+                </div>
+                <div class="metadata-item">
+                  <label>{{ 'EXPLORER.SERIE_NAME' | translate }}:</label>
+                  <span class="metadata-value">{{ selectedFileDetails.remoteMetadata.serieName || 'N/A' }}</span>
+                </div>
+                <div class="metadata-item" *ngIf="selectedFileDetails.remoteMetadata.branchCode">
+                  <label>{{ 'EXPLORER.BRANCH_CODE' | translate }}:</label>
+                  <span class="metadata-value">{{ selectedFileDetails.remoteMetadata.branchCode }}</span>
+                </div>
+                <div class="metadata-item">
+                  <label>{{ 'EXPLORER.REQUIRES_BRANCH_CODE' | translate }}:</label>
+                  <span class="metadata-value">
+                    {{ selectedFileDetails.remoteMetadata.requiresBranchCode ? ('GLOBAL.YES' | translate) : ('GLOBAL.NO' | translate) }}
+                  </span>
+                </div>
+                <div class="metadata-item">
+                  <label>{{ 'EXPLORER.COMPANY_DIRECTORY' | translate }}:</label>
+                  <span class="metadata-value">{{ selectedFileDetails.remoteMetadata.companyDirectory || 'N/A' }}</span>
+                </div>
+                <div class="metadata-item full-width">
+                  <label>{{ 'EXPLORER.REMOTE_DIRECTORY' | translate }}:</label>
+                  <span class="metadata-value code">{{ selectedFileDetails.remoteMetadata.remoteDirectory || 'N/A' }}</span>
+                </div>
+                <div class="metadata-item full-width">
+                  <label>{{ 'EXPLORER.REMOTE_FILENAME' | translate }}:</label>
+                  <div class="filename-with-copy">
+                    <span class="metadata-value code">{{ selectedFileDetails.remoteMetadata.remoteFilename || 'N/A' }}</span>
+                    <button class="btn-copy" *ngIf="selectedFileDetails.remoteMetadata.remoteFilename" 
+                            (click)="copyToClipboard(selectedFileDetails.remoteMetadata.remoteFilename!)" 
+                            title="{{ 'EXPLORER.COPY' | translate }}">
+                      <i class="fas fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Mensaje si no hay metadata -->
+            <section class="no-metadata-section" *ngIf="!selectedFileDetails.remoteMetadata">
+              <p class="info-message">
+                {{ 'EXPLORER.NO_REMOTE_METADATA' | translate }}
+              </p>
+            </section>
+          </div>
+
+          <div class="loading" *ngIf="loadingFileDetails">
+            <p>{{ 'GLOBAL.LOADING' | translate }}...</p>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styleUrls: ['./explorer.component.scss']
@@ -276,6 +451,7 @@ export class ExplorerComponent implements OnInit {
   showCreateFolderDialog = false;
   showDeleteConfirm = false;
   showVersionDialog = false;
+  showFileDetailsDialog = false;
   
   // Estados de operaciones
   selectedFile: globalThis.File | null = null;
@@ -283,12 +459,20 @@ export class ExplorerComponent implements OnInit {
   creatingFolder = false;
   fileToDelete: FileItem | null = null;
   selectedFileId: string = '';
+  selectedFileDetails: any = null;
+  loadingFileDetails = false;
   
   // Debug
   environment = environment;
   
   // Propiedad para determinar si estamos en modo de gestión de carpetas
   isManagementMode = false;
+  
+  // GroupNames para autocompletado
+  groupNames: string[] = [];
+  filteredGroupNames: string[] = [];
+  showGroupNameSuggestions = false;
+  isNewGroupName = false;
 
   constructor(
     private apiService: ApiService,
@@ -304,7 +488,26 @@ export class ExplorerComponent implements OnInit {
     this.uploadForm = this.fb.group({
       description: [''],
       tags: [''],
-      customName: ['']
+      customName: [''],
+      // Campos SFTP opcionales
+      prefijo: [''],
+      groupName: [''],
+      serieName: [''],
+      branchCode: ['']
+    });
+    
+    // Escuchar cambios en el prefijo para mostrar/ocultar BranchCode automáticamente
+    this.uploadForm.get('prefijo')?.valueChanges.subscribe(prefijo => {
+      const branchCodeControl = this.uploadForm.get('branchCode');
+      if (prefijo === 'LEK2') {
+        // Si es LEK2, limpiar el BranchCode para que el usuario lo ingrese
+        if (branchCodeControl?.value === '') {
+          // Solo limpiar si está vacío, no sobrescribir si ya tiene valor
+        }
+      } else {
+        // Si no es LEK2, limpiar el BranchCode ya que no se necesita
+        branchCodeControl?.setValue('');
+      }
     });
     
     this.folderCreateForm = this.fb.group({
@@ -316,6 +519,9 @@ export class ExplorerComponent implements OnInit {
     // Verificar si estamos en modo de gestión de carpetas basado en la ruta actual
     this.isManagementMode = this.router.url.includes('/explorer/folders');
     console.log('Modo gestión:', this.isManagementMode);
+    
+    // Cargar GroupNames existentes
+    this.loadGroupNames();
     
     // Obtener información del usuario actual
     const currentUser = this.authService.currentUser;
@@ -528,33 +734,19 @@ export class ExplorerComponent implements OnInit {
         if (response && response.data) {
           // Verificar si los elementos son carpetas o archivos
           const processedItems = response.data.map((item: any) => {
-            // Crear un objeto base con propiedades comunes
-            const processedItem: any = {
-              _id: item._id || '',
-              name: item.name || item.originalName || 'Sin nombre',
-              path: item.path || '',
-              createdAt: item.createdAt || new Date().toISOString()
-            };
-            
             // Verificar si es una carpeta basado en el campo isFolder
             if (item.isFolder === true) {
               // Es una carpeta, añadir a la lista de carpetas
               return {
-                ...processedItem,
+                _id: item._id || '',
+                name: item.name || item.originalName || 'Sin nombre',
+                path: item.path || '',
+                createdAt: item.createdAt || new Date().toISOString(),
                 isFolder: true,
                 itemCount: item.itemCount || 0
               };
             } else {
-              // Es un archivo, añadir propiedades específicas de archivo
-              return {
-                ...processedItem,
-                originalName: item.originalName || item.name || 'Sin nombre',
-                size: item.size || 0,
-                mimeType: item.mimeType || 'application/octet-stream',
-                extension: item.extension || 'desconocido',
-                url: item.url || '',
-                isFolder: false
-              };
+              return this.mapFileItem(item);
             }
           });
           
@@ -569,6 +761,7 @@ export class ExplorerComponent implements OnInit {
           
           // Asignar archivos
           this.files = filesFromResponse;
+          this.addGroupNamesFromFiles(filesFromResponse);
           
           console.log('Carpetas después de procesar:', this.folders);
           console.log('Archivos después de procesar:', this.files);
@@ -677,6 +870,35 @@ export class ExplorerComponent implements OnInit {
           const tagsControl = this.uploadForm.get('tags');
           const tags = tagsControl?.value || '';
           
+          // Campos SFTP opcionales
+          const prefijoControl = this.uploadForm.get('prefijo');
+          const prefijo = prefijoControl?.value || '';
+          
+          const groupNameControl = this.uploadForm.get('groupName');
+          const groupName = groupNameControl?.value || '';
+          
+          // SerieName se duplica automáticamente del GroupName
+          const serieName = groupName; // Usar el mismo valor que groupName
+          
+          const branchCodeControl = this.uploadForm.get('branchCode');
+          const branchCode = branchCodeControl?.value || '';
+          
+          // Determinar automáticamente si requiere BranchCode basado en el prefijo
+          const requiresBranchCode = prefijo === 'LEK2';
+          
+          // Preparar opciones SFTP solo si hay al menos un campo SFTP
+          const sftpOptions: any = {};
+          if (prefijo || groupName || branchCode) {
+            if (prefijo) sftpOptions.prefijo = prefijo;
+            if (groupName) {
+              sftpOptions.groupName = groupName;
+              // SerieName siempre se envía igual a groupName si groupName existe
+              sftpOptions.serieName = groupName;
+            }
+            if (branchCode) sftpOptions.branchCode = branchCode;
+            sftpOptions.requiresBranchCode = requiresBranchCode;
+          }
+          
           // Agregar nombre personalizado si existe y es diferente al nombre del archivo
           const customNameToUse = customName || selectedFile.name;
           
@@ -685,6 +907,7 @@ export class ExplorerComponent implements OnInit {
           if (customName && customName !== selectedFile.name) {
             console.log('Enviando archivo con nombre personalizado:', customNameToUse);
             console.log('FolderId:', this.currentFolderId);
+            console.log('Opciones SFTP:', Object.keys(sftpOptions).length > 0 ? sftpOptions : 'ninguna');
             
             // Uso de FileUploadService para manejar nombre personalizado
             this.fileUploadService.uploadFileWithCustomName(
@@ -692,7 +915,8 @@ export class ExplorerComponent implements OnInit {
               customNameToUse,
               this.currentFolderId,  // Pasamos el folderId como parámetro
               description,
-              tags
+              tags,
+              Object.keys(sftpOptions).length > 0 ? sftpOptions : undefined
             ).subscribe({
               next: (progress) => {
                 console.log('Progreso de carga:', progress.progress);
@@ -733,6 +957,15 @@ export class ExplorerComponent implements OnInit {
             // Agregar etiquetas si existen
             if (tags) {
               formData.append('tags', tags);
+            }
+            
+            // Agregar campos SFTP si existen
+            if (Object.keys(sftpOptions).length > 0) {
+              if (sftpOptions.prefijo) formData.append('prefijo', sftpOptions.prefijo);
+              if (sftpOptions.groupName) formData.append('groupName', sftpOptions.groupName);
+              if (sftpOptions.serieName) formData.append('serieName', sftpOptions.serieName);
+              if (sftpOptions.branchCode) formData.append('branchCode', sftpOptions.branchCode);
+              formData.append('requiresBranchCode', sftpOptions.requiresBranchCode.toString());
             }
             
             // Uso del endpoint genérico a través de apiService
@@ -1052,7 +1285,9 @@ export class ExplorerComponent implements OnInit {
           }
           
           // Asignar solo los archivos reales
-          this.files = soloArchivos;
+          const normalizedFiles = soloArchivos.map((item: any) => this.mapFileItem(item));
+          this.files = normalizedFiles;
+          this.addGroupNamesFromFiles(normalizedFiles);
           console.log('Archivos finales:', this.files.length);
         } else {
           this.files = [];
@@ -1381,6 +1616,97 @@ export class ExplorerComponent implements OnInit {
     this.showVersionDialog = true;
   }
 
+  showFileDetails(fileId: string, event: Event): void {
+    event.stopPropagation();
+    this.loadingFileDetails = true;
+    this.showFileDetailsDialog = true;
+    this.selectedFileDetails = null;
+    
+    // Cargar detalles completos del archivo
+    this.apiService.get(`/files/${fileId}`).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.selectedFileDetails = response.data;
+        } else {
+          console.error('Formato de respuesta inesperado:', response);
+        }
+        this.loadingFileDetails = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar detalles del archivo:', error);
+        this.loadingFileDetails = false;
+        alert('Error al cargar los detalles del archivo');
+      }
+    });
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      // Mostrar notificación de éxito (puedes usar un servicio de toast si lo tienes)
+      alert('Copiado al portapapeles');
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+    });
+  }
+
+  private mapFileItem(item: any): FileItem {
+    return {
+      _id: item._id || '',
+      name: item.name || item.originalName || 'Sin nombre',
+      originalName: item.originalName || item.name || 'Sin nombre',
+      size: item.size || 0,
+      mimeType: item.mimeType || 'application/octet-stream',
+      extension: item.extension || 'desconocido',
+      createdAt: item.createdAt || new Date().toISOString(),
+      path: item.path || '',
+      url: item.url || '',
+      isFolder: false,
+      remoteMetadata: item.remoteMetadata || null,
+      description: item.description,
+      status: item.status
+    };
+  }
+
+  private mergeGroupNames(names: string[]): void {
+    if (!Array.isArray(names) || names.length === 0) {
+      return;
+    }
+    
+    const normalized = names
+      .map(name => typeof name === 'string' ? name.trim() : '')
+      .filter(name => name.length > 0);
+    
+    if (!normalized.length) {
+      return;
+    }
+    
+    const currentSet = new Set(this.groupNames);
+    let changed = false;
+    
+    normalized.forEach(name => {
+      if (!currentSet.has(name)) {
+        currentSet.add(name);
+        changed = true;
+      }
+    });
+    
+    if (changed) {
+      this.groupNames = Array.from(currentSet).sort((a, b) => a.localeCompare(b));
+    }
+  }
+
+  private addGroupNamesFromFiles(fileList: FileItem[]): void {
+    if (!Array.isArray(fileList) || fileList.length === 0) {
+      return;
+    }
+    
+    const names = fileList
+      .map(file => file.remoteMetadata?.groupName)
+      .filter((name): name is string => typeof name === 'string' && name.trim().length > 0);
+    
+    this.mergeGroupNames(names);
+  }
+
   refreshFileList(): void {
     if (this.currentFolderId) {
       this.loadFolderContent(this.currentFolderId);
@@ -1390,12 +1716,90 @@ export class ExplorerComponent implements OnInit {
   }
 
   // Mostrar el diálogo de subida de archivos y precargar nombre predeterminado si existe
+  loadGroupNames(): void {
+    // Intentar obtener GroupNames desde el backend
+    // Si no hay endpoint específico, usar una lista vacía inicialmente
+    this.apiService.get<string[]>('/files/group-names').subscribe({
+      next: (response: any) => {
+        if (response && response.success && Array.isArray(response.data)) {
+          this.groupNames = [];
+          this.mergeGroupNames(response.data);
+        } else if (Array.isArray(response)) {
+          this.groupNames = [];
+          this.mergeGroupNames(response);
+        }
+      },
+      error: (error) => {
+        console.warn('No se pudieron cargar GroupNames, usando lista vacía:', error);
+        if (!this.groupNames.length) {
+          this.addGroupNamesFromFiles(this.files);
+        }
+      }
+    });
+  }
+
+  onGroupNameInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.trim();
+    
+    if (value.length === 0) {
+      this.filteredGroupNames = [];
+      this.showGroupNameSuggestions = false;
+      this.isNewGroupName = false;
+      return;
+    }
+    
+    // Filtrar GroupNames que contengan el texto ingresado (case-insensitive)
+    const matches = this.groupNames.filter(name => 
+      name.toLowerCase().includes(value.toLowerCase())
+    );
+    
+    // Verificar si el valor exacto ya existe
+    const exactMatch = this.groupNames.find(name => 
+      name.toLowerCase() === value.toLowerCase()
+    );
+    
+    // Si no hay coincidencia exacta y hay texto, mostrar opción para crear nuevo
+    if (!exactMatch && value.length > 0) {
+      this.filteredGroupNames = [...matches, `✨ Crear nuevo: "${value}"`];
+    } else {
+      this.filteredGroupNames = matches;
+    }
+    
+    // Mostrar sugerencias si hay texto ingresado
+    this.showGroupNameSuggestions = value.length > 0;
+    this.isNewGroupName = !exactMatch;
+  }
+
+  selectGroupName(groupName: string): void {
+    if (groupName.startsWith('✨ Crear nuevo: "')) {
+      const newName = groupName.replace('✨ Crear nuevo: "', '').replace(/"$/, '');
+      this.uploadForm.get('groupName')?.setValue(newName);
+      this.isNewGroupName = true;
+    } else {
+      this.uploadForm.get('groupName')?.setValue(groupName);
+      this.isNewGroupName = false;
+    }
+    this.showGroupNameSuggestions = false;
+    this.filteredGroupNames = [];
+  }
+
+  onGroupNameBlur(): void {
+    // Ocultar sugerencias después de un pequeño delay para permitir clicks
+    setTimeout(() => {
+      this.showGroupNameSuggestions = false;
+    }, 200);
+  }
+
   openUploadDialog(): void {
     // Verificar si tenemos una carpeta seleccionada
     if (!this.currentFolderId) {
       alert('Por favor, primero seleccione una carpeta donde subir los archivos.');
       return;
     }
+    
+    // Recargar GroupNames para tener la lista más actualizada
+    this.loadGroupNames();
     
     // Obtener los detalles de la carpeta actual para ver si tiene un nombre de archivo por defecto
     this.folderService.getFolderDetails(this.currentFolderId).subscribe({

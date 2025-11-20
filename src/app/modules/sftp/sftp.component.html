@@ -1,0 +1,77 @@
+<div class="sftp-explorer">
+  <div class="header">
+    <h1>🔍 Explorador SFTP</h1>
+    <div class="status">
+      <span>Estado: </span>
+      <span [class.connected]="status?.connected" [class.disconnected]="!status?.connected">
+        {{ status?.connected ? '✅ Conectado' : '❌ Desconectado' }}
+      </span>
+      <span *ngIf="status?.host"> | Servidor: {{ status?.host }}</span>
+      <span *ngIf="status?.port">:{{ status?.port }}</span>
+      <span *ngIf="status?.rootDirectory"> | Directorio raíz: {{ status?.rootDirectory }}</span>
+    </div>
+  </div>
+
+  <div class="breadcrumb">
+    <span *ngFor="let part of getBreadcrumb(); let i = index">
+      <span *ngIf="i > 0"> / </span>
+      <a (click)="navigateTo(getBreadcrumbPath(i))" 
+         class="breadcrumb-link">
+        {{ part === '/' ? '🏠 Inicio' : part }}
+      </a>
+    </span>
+  </div>
+
+  <div *ngIf="error" class="error">
+    ❌ {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <span>Cargando...</span>
+  </div>
+
+  <div *ngIf="!loading" class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Nombre</th>
+          <th>Tamaño</th>
+          <th>Modificado</th>
+          <th>Permisos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="files.length === 0">
+          <td colspan="5" class="empty-directory">
+            Directorio vacío
+          </td>
+        </tr>
+        <tr *ngFor="let file of files" class="file-row">
+          <td class="file-type">
+            {{ file.type === 'directory' ? '📁' : '📄' }}
+          </td>
+          <td class="file-name">
+            <a *ngIf="file.type === 'directory'" 
+               (click)="navigateTo(file.path)"
+               class="directory-link">
+              {{ file.name }}
+            </a>
+            <span *ngIf="file.type !== 'directory'">{{ file.name }}</span>
+          </td>
+          <td class="file-size">
+            {{ file.type === 'directory' ? '-' : formatSize(file.size) }}
+          </td>
+          <td class="file-date">
+            {{ formatDate(file.modified) }}
+          </td>
+          <td class="file-permissions">
+            {{ file.permissions || '-' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+

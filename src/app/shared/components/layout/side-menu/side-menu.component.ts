@@ -41,12 +41,21 @@ export class SideMenuComponent implements OnInit, OnDestroy {
       active: true
     },
     {
+      _id: 'sftp',
+      name: 'MENU.SFTP',
+      url: '/sftp',
+      icon: 'fas fa-server',
+      permissionCode: 'sftp_view',
+      order: 5,
+      active: true
+    },
+    {
       _id: 'users',
       name: 'MENU.USERS',
       url: '/users',
       icon: 'fas fa-users',
       permissionCode: 'users_manage',
-      order: 5,
+      order: 6,
       active: true
     },
     {
@@ -55,7 +64,7 @@ export class SideMenuComponent implements OnInit, OnDestroy {
       url: '/companies',
       icon: 'fas fa-building',
       permissionCode: 'companies_manage',
-      order: 6,
+      order: 7,
       active: true
     },
     {
@@ -64,7 +73,7 @@ export class SideMenuComponent implements OnInit, OnDestroy {
       url: '/organization/areas',
       icon: 'fas fa-sitemap',
       permissionCode: 'organization_manage',
-      order: 7,
+      order: 8,
       active: true
     },
     {
@@ -73,7 +82,7 @@ export class SideMenuComponent implements OnInit, OnDestroy {
       url: '/logs',
       icon: 'fas fa-clipboard-list',
       permissionCode: 'logs_view',
-      order: 8,
+      order: 9,
       active: true
     }
   ];
@@ -136,7 +145,7 @@ export class SideMenuComponent implements OnInit, OnDestroy {
       // Filtrar según los roles que tenga
       if (isCompanyAdmin) {
         // Admin de compañía tiene acceso a todo excepto gestión de empresas
-        if (['dashboard', 'files', 'file-status', 'users', 'areas', 'settings', 'logs'].includes(item._id)) {
+        if (['dashboard', 'files', 'file-status', 'sftp', 'users', 'areas', 'settings', 'logs'].includes(item._id)) {
           return true;
         }
       }
